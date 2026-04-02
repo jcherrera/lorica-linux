@@ -1,0 +1,28 @@
+# Lorica Linux -- Cloud Provider Overrides (EXAMPLE)
+# /usr/share/doc/lorica-base/cloud-overrides.conf.example
+#
+# Copy the settings you need to /etc/sysctl.d/99-lorica-cloud-overrides.conf
+# Files in /etc/sysctl.d/ override /usr/lib/sysctl.d/ by design.
+#
+# After copying, run: sudo sysctl --system
+
+# --- IPv6 Router Advertisements ---
+# Required for: AWS IPv6 VPCs, GCP dual-stack subnets, Azure IPv6
+# Without this, IPv6 addresses won't be assigned via SLAAC.
+# Uncomment if your cloud provider uses RA for IPv6:
+#net.ipv6.conf.all.accept_ra=1
+#net.ipv6.conf.default.accept_ra=1
+
+# --- Gratuitous ARP ---
+# Lorica base allows gratuitous ARP by default (drop_gratuitous_arp=0).
+# The hardened profile sets 1. If running hardened profile with floating IPs:
+#net.ipv4.conf.all.drop_gratuitous_arp=0
+
+# --- ICMP Echo (ping) ---
+# Lorica base allows ping by default. The hardened profile blocks it.
+# If running hardened profile but need health checks:
+#net.ipv4.icmp_echo_ignore_all=0
+
+# --- IP Forwarding ---
+# Docker and Kubernetes set ip_forward=1 automatically at runtime.
+# If your container runtime isn't overriding this, check its configuration.

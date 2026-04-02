@@ -1,0 +1,2 @@
+etc/sysctl.d/92-lorica-hardened.conf etc/sysctl.d/
+etc/default/grub.d/51-lorica-hardened.cfg etc/default/grub.d/

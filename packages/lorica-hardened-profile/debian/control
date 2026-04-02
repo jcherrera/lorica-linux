@@ -1,0 +1,20 @@
+Source: lorica-hardened-profile
+Section: admin
+Priority: optional
+Maintainer: Lorica Linux <lorica@example.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: lorica-hardened-profile
+Architecture: all
+Depends: lorica-base, ${misc:Depends}
+Description: Lorica Linux maximum hardening profile
+ Opt-in hardening overrides for high-security environments. Installs
+ sysctl and GRUB drop-in configs that override lorica-base defaults
+ with maximum hardening: panic on kernel warnings, disable SMT,
+ SLUB debug, lockdown=confidentiality, block all ICMP, no ptrace.
+ .
+ WARNING: This profile impacts performance and breaks some debugging
+ workflows. Review docs/hardening-decisions.md before installing.
+ .
+ Install via: apt install lorica-hardened-profile

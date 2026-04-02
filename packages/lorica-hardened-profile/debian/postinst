@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    # --- Apply hardened sysctl overrides ---
+    sysctl --system > /dev/null 2>&1 || true
+
+    # --- Update GRUB with hardened boot parameters ---
+    if command -v update-grub > /dev/null 2>&1; then
+      update-grub 2> /dev/null || true
+    fi
+
+    echo "lorica-hardened-profile: Maximum hardening applied. Reboot required."
+    ;;
+esac
+
+#DEBHELPER#

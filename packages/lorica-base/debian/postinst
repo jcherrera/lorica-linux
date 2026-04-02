@@ -9,6 +9,7 @@ case "$1" in
     # kernel <  6.6 but >= 5.13: io_uring_group available
     # kernel <  5.13: no io_uring sysctl, skip
     IOURING_CONF="/etc/sysctl.d/91-lorica-io-uring.conf"
+    mkdir -p /etc/sysctl.d
     KVER=$(uname -r | cut -d. -f1-2)
     KMAJOR=$(echo "$KVER" | cut -d. -f1)
     KMINOR=$(echo "$KVER" | cut -d. -f2)

@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lorica-base
+
+Files: *
+Copyright: 2026 Lorica Linux
+License: GPL-2.0
+ See /usr/share/common-licenses/GPL-2 for the full license text.

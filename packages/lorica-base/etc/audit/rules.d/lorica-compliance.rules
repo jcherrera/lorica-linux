@@ -1,0 +1,12 @@
+# Lorica Linux -- Audit Rules for Compliance
+# https://github.com/lorica-linux/lorica-linux
+#
+# Mapped to: CIS Debian Benchmark, PCI-DSS, SOC 2, CNBV
+# See docs/COMPLIANCE_MAP.md for the full mapping.
+#
+# TODO: Full audit rules will be added in Step 3 (research phase).
+# This is a skeleton for CI validation.
+
+# Monitor changes to user/group files (CIS 4.1.4)
+-w /etc/passwd -p wa -k identity
+-w /etc/group -p wa -k identity

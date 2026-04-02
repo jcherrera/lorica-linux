@@ -1,0 +1,12 @@
+Source: lorica-keyring
+Section: misc
+Priority: optional
+Maintainer: Lorica Linux <lorica@example.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: lorica-keyring
+Architecture: all
+Description: Lorica Linux archive signing key
+ Contains the GPG signing key used to authenticate
+ packages from the Lorica Linux APT repository.

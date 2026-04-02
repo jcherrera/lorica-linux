@@ -1,0 +1,20 @@
+Source: lorica-base
+Section: admin
+Priority: optional
+Maintainer: Lorica Linux <lorica@example.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: lorica-base
+Architecture: all
+Depends: ${misc:Depends}
+Recommends: apparmor, auditd, fail2ban, ufw, unattended-upgrades
+Description: Lorica Linux base hardening configuration
+ Security hardening for Debian servers. Installs drop-in configuration
+ files for sysctl, GRUB boot parameters, kernel module blacklisting,
+ and audit rules. Every setting is documented with its rationale and
+ mapped to compliance frameworks (CIS, PCI-DSS, SOC 2, CNBV).
+ .
+ This package uses drop-in configs in /usr/lib/sysctl.d/,
+ /etc/default/grub.d/, /etc/modprobe.d/, and /etc/audit/rules.d/.
+ It never modifies files owned by other Debian packages.

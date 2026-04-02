@@ -1,0 +1,33 @@
+# Build artifacts
+*.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.gz
+*.tar.xz
+
+# Debian build directories
+packages/*/debian/.debhelper/
+packages/*/debian/lorica-*/
+packages/*/debian/files
+packages/*/debian/debhelper-build-stamp
+packages/*/debian/*.substvars
+packages/*/debian/*.debhelper.log
+
+# GPG private keys (NEVER commit)
+*.gpg
+*.asc
+!packages/lorica-keyring/*.asc
+
+# Editor/OS files
+.DS_Store
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Plan/memory files (local only)
+lorica-linux-project.md
+v0.1-implementation-plan.md
+CLAUDE.md

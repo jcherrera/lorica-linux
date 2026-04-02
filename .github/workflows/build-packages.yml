@@ -1,0 +1,73 @@
+name: Build and Test Packages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential \
+            debhelper \
+            devscripts \
+            git
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build lorica-keyring
+        working-directory: packages/lorica-keyring
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Build lorica-base
+        working-directory: packages/lorica-base
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Build lorica-cloud-server
+        working-directory: packages/lorica-cloud-server
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Install packages
+        run: |
+          apt-get install -y --no-install-recommends \
+            ./packages/lorica-keyring_*.deb \
+            ./packages/lorica-base_*.deb \
+            ./packages/lorica-cloud-server_*.deb
+
+      - name: Verify config files are installed
+        run: |
+          test -f /usr/lib/sysctl.d/90-lorica-hardening.conf
+          test -f /etc/default/grub.d/50-lorica-hardening.cfg
+          test -f /etc/modprobe.d/30-lorica-blacklist.conf
+          test -f /etc/audit/rules.d/lorica-compliance.rules
+          echo "All config files present."
+
+      - name: Uninstall packages
+        run: |
+          apt-get remove -y lorica-cloud-server lorica-base lorica-keyring
+
+      - name: Verify clean uninstall
+        run: |
+          ! test -f /usr/lib/sysctl.d/90-lorica-hardening.conf
+          ! test -f /etc/default/grub.d/50-lorica-hardening.cfg
+          ! test -f /etc/modprobe.d/30-lorica-blacklist.conf
+          ! test -f /etc/audit/rules.d/lorica-compliance.rules
+          echo "Clean uninstall verified."
+
+      - name: Upload .deb artifacts
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lorica-debs
+          path: packages/*.deb
+          retention-days: 30

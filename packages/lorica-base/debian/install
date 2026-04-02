@@ -1,0 +1,4 @@
+usr/lib/sysctl.d/90-lorica-hardening.conf /usr/lib/sysctl.d/
+etc/default/grub.d/50-lorica-hardening.cfg /etc/default/grub.d/
+etc/modprobe.d/30-lorica-blacklist.conf /etc/modprobe.d/
+etc/audit/rules.d/lorica-compliance.rules /etc/audit/rules.d/

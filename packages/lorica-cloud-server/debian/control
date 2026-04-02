@@ -1,0 +1,17 @@
+Source: lorica-cloud-server
+Section: admin
+Priority: optional
+Maintainer: Lorica Linux <lorica@example.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: lorica-cloud-server
+Architecture: all
+Depends: lorica-base, lorica-keyring, ${misc:Depends}
+Recommends: cloud-init, fail2ban, unattended-upgrades
+Description: Lorica Linux server meta-package
+ Installs the full Lorica Linux hardening stack for servers.
+ This is the recommended entry point for new installations.
+ .
+ Depends on lorica-base (OS hardening) and lorica-keyring (APT signing key).
+ Recommends cloud-init and security tooling for server environments.

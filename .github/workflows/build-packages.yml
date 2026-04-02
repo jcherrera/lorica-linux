@@ -51,6 +51,19 @@ jobs:
           test -f /etc/modprobe.d/30-lorica-blacklist.conf
           test -f /etc/audit/rules.d/lorica-compliance.rules
           echo "All config files present."
+          # Content validation -- configs are not empty stubs
+          grep -q "kernel.kptr_restrict=2" /usr/lib/sysctl.d/90-lorica-hardening.conf
+          grep -q "net.ipv4.tcp_syncookies=1" /usr/lib/sysctl.d/90-lorica-hardening.conf
+          grep -q "oops=panic" /etc/default/grub.d/50-lorica-hardening.cfg
+          grep -q "lockdown=integrity" /etc/default/grub.d/50-lorica-hardening.cfg
+          grep -q "install bluetooth /bin/false" /etc/modprobe.d/30-lorica-blacklist.conf
+          grep -q "install dccp /bin/false" /etc/modprobe.d/30-lorica-blacklist.conf
+          test $(grep -c '/bin/false' /etc/modprobe.d/30-lorica-blacklist.conf) -ge 38
+          grep -q "\-e 2" /etc/audit/rules.d/lorica-compliance.rules
+          grep -q "arch=b32" /etc/audit/rules.d/lorica-compliance.rules
+          grep -q "tmp_exec" /etc/audit/rules.d/lorica-compliance.rules
+          test -f /etc/sysctl.d/91-lorica-io-uring.conf
+          test -f /usr/share/doc/lorica-base/cloud-overrides.conf.example
 
       - name: Uninstall packages
         run: |
@@ -62,6 +75,7 @@ jobs:
           ! test -f /etc/default/grub.d/50-lorica-hardening.cfg
           ! test -f /etc/modprobe.d/30-lorica-blacklist.conf
           ! test -f /etc/audit/rules.d/lorica-compliance.rules
+          test ! -f /etc/sysctl.d/91-lorica-io-uring.conf
           echo "Clean uninstall verified."
 
       - name: Upload .deb artifacts

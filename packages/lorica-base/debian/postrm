@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove|purge)
+    # Remove auto-generated io_uring sysctl
+    rm -f /etc/sysctl.d/91-lorica-io-uring.conf
+
+    # Reload sysctl to revert to defaults
+    sysctl --system > /dev/null 2>&1 || true
+
+    # Regenerate GRUB config without Lorica params
+    if command -v update-grub > /dev/null 2>&1; then
+      update-grub 2> /dev/null || true
+    fi
+    ;;
+esac
+
+#DEBHELPER#

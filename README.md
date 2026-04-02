@@ -10,7 +10,8 @@ It is **not** a fork. It is a thin collection of hardening configurations, meta-
 
 - Hardened OS defaults: sysctl, boot parameters, kernel module restrictions
 - Audit rules mapped to compliance frameworks (CIS, PCI-DSS, SOC 2, CNBV)
-- Minimal attack surface: unnecessary daemons removed, services locked down
+- Minimal attack surface: 38 unnecessary kernel modules disabled, uncommon protocols blocked
+- Two profiles: production-safe defaults (lorica-base) and maximum hardening (lorica-hardened-profile)
 - Documented rationale for every security decision
 - Clean install/uninstall: Lorica uses drop-in configs, never modifies Debian-owned files
 
@@ -37,14 +38,26 @@ sudo apt install lorica-cloud-server
 sudo reboot
 ```
 
-## Uninstall
+## Hardened Profile
+
+For maximum hardening (high-security environments, compliance-driven deployments):
 
 ```bash
-sudo apt remove lorica-cloud-server lorica-base lorica-keyring
+sudo apt install lorica-hardened-profile
 sudo reboot
 ```
 
-Lorica uses drop-in configuration files (`/usr/lib/sysctl.d/`, `/etc/default/grub.d/`, `/etc/modprobe.d/`). Removing the packages removes the configs. Your system returns to stock Debian behavior.
+This adds: disable hyperthreading (`nosmt`), panic on kernel warnings, block all ICMP echo, drop gratuitous ARP, SLUB integrity checks, and `lockdown=confidentiality`. See [CONFIG_RATIONALE.md](docs/CONFIG_RATIONALE.md) for what each override does and what it breaks.
+
+## Uninstall
+
+```bash
+# Remove all Lorica packages (include lorica-hardened-profile if installed)
+sudo apt remove lorica-cloud-server lorica-base lorica-keyring lorica-hardened-profile
+sudo reboot
+```
+
+Lorica uses drop-in configuration files (`/usr/lib/sysctl.d/`, `/etc/default/grub.d/`, `/etc/modprobe.d/`, `/etc/audit/rules.d/`). Removing the packages removes the configs. Your system returns to stock Debian behavior.
 
 ## What's Included
 
@@ -54,26 +67,20 @@ Memory protections, network hardening, kernel pointer restrictions, and more. Ev
 
 ### Boot Parameter Hardening
 
-CPU vulnerability mitigations, IOMMU enforcement, kernel hardening flags, applied via GRUB drop-in config.
+CPU vulnerability mitigations, memory zeroing (`init_on_alloc`, `init_on_free`), heap isolation (`slab_nomerge`), kernel lockdown, applied via GRUB drop-in config.
 
 ### Kernel Module Blacklist
 
-Disables kernel modules irrelevant to servers: Bluetooth, FireWire, Thunderbolt, USB HID, uncommon filesystems, legacy protocols.
+Disables 38 kernel modules irrelevant to servers: Bluetooth, FireWire, Thunderbolt, USB storage, sound, Intel ME, uncommon filesystems, legacy network protocols.
 
 ### Audit Rules
 
 Pre-configured audit rules for compliance: privileged command execution, file permission changes, user/group modifications, kernel module loading, network configuration changes. Mapped to CIS and PCI-DSS controls.
 
-### Service Lockdown
-
-Unnecessary packages removed (exim4, cups, avahi-daemon, rpcbind). Security tooling pre-installed (AppArmor, auditd, fail2ban, UFW, unattended-upgrades).
-
 ## Documentation
 
-- [CONFIG_RATIONALE.md](docs/CONFIG_RATIONALE.md) -- Every hardening config explained
-- [COMPLIANCE_MAP.md](docs/COMPLIANCE_MAP.md) -- Mapping to CIS, PCI-DSS, SOC 2, CNBV
-- [THREAT_MODEL.md](docs/THREAT_MODEL.md) -- What's in scope and what's not
-- [INSTALL.md](docs/INSTALL.md) -- Detailed installation guide
+- [CONFIG_RATIONALE.md](docs/CONFIG_RATIONALE.md) -- Per-setting rationale for every shipped config
+- [hardening-decisions.md](docs/hardening-decisions.md) -- Source of truth for all hardening decisions, including excluded settings and why
 
 ## Roadmap
 

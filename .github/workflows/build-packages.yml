@@ -90,7 +90,7 @@ jobs:
 
       - name: Uninstall hardened profile
         run: |
-          apt-get remove -y lorica-hardened-profile
+          apt-get purge -y lorica-hardened-profile
 
       - name: Verify hardened profile uninstall
         run: |
@@ -99,7 +99,7 @@ jobs:
 
       - name: Uninstall packages
         run: |
-          apt-get remove -y lorica-cloud-server lorica-base lorica-keyring
+          apt-get purge -y lorica-cloud-server lorica-base lorica-keyring
 
       - name: Verify clean uninstall
         run: |

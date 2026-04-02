@@ -33,6 +33,10 @@ jobs:
         working-directory: packages/lorica-base
         run: dpkg-buildpackage -us -uc -b
 
+      - name: Build lorica-hardened-profile
+        working-directory: packages/lorica-hardened-profile
+        run: dpkg-buildpackage -us -uc -b
+
       - name: Build lorica-cloud-server
         working-directory: packages/lorica-cloud-server
         run: dpkg-buildpackage -us -uc -b
@@ -64,6 +68,34 @@ jobs:
           grep -q "tmp_exec" /etc/audit/rules.d/lorica-compliance.rules
           test -f /etc/sysctl.d/91-lorica-io-uring.conf
           test -f /usr/share/doc/lorica-base/cloud-overrides.conf.example
+          # Verify hardened-only settings are NOT in base configs
+          ! grep -q "panic_on_warn" /usr/lib/sysctl.d/90-lorica-hardening.conf
+          ! grep -q "nosmt" /etc/default/grub.d/50-lorica-hardening.cfg
+
+      - name: Install lorica-hardened-profile
+        run: |
+          apt-get install -y --no-install-recommends \
+            ./packages/lorica-hardened-profile_*.deb
+
+      - name: Verify hardened profile configs
+        run: |
+          test -f /etc/sysctl.d/92-lorica-hardened.conf
+          test -f /etc/default/grub.d/51-lorica-hardened.cfg
+          # Content validation
+          grep -q "kernel.panic_on_warn=1" /etc/sysctl.d/92-lorica-hardened.conf
+          grep -q "kernel.yama.ptrace_scope=3" /etc/sysctl.d/92-lorica-hardened.conf
+          grep -q "icmp_echo_ignore_all=1" /etc/sysctl.d/92-lorica-hardened.conf
+          grep -q "nosmt" /etc/default/grub.d/51-lorica-hardened.cfg
+          grep -q "lockdown=confidentiality" /etc/default/grub.d/51-lorica-hardened.cfg
+
+      - name: Uninstall hardened profile
+        run: |
+          apt-get remove -y lorica-hardened-profile
+
+      - name: Verify hardened profile uninstall
+        run: |
+          ! test -f /etc/sysctl.d/92-lorica-hardened.conf
+          ! test -f /etc/default/grub.d/51-lorica-hardened.cfg
 
       - name: Uninstall packages
         run: |

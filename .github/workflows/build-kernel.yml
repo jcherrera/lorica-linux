@@ -61,6 +61,7 @@ jobs:
             dwarves \
             python3 \
             "gcc-${GCC_VER}-plugin-dev" \
+            debhelper \
             ccache \
             wget \
             gnupg

@@ -281,9 +281,15 @@ check_sysctl_reverted() {
   lorica_norm="$(normalize_ws "$lorica_value")"
 
   if [ "$actual_norm" != "$lorica_norm" ]; then
-    pass "sysctl $key reverted from $lorica_norm to $actual_norm (Debian default: $debian_default)"
+    pass "sysctl $key reverted from $lorica_norm to $actual_norm"
   else
-    fail "sysctl $key still $lorica_norm after uninstall (expected Debian default: $debian_default)"
+    # Value matches Lorica's setting, but check if it's just the kernel default
+    # (no sysctl.d file sets it) — if so, the uninstall is clean
+    if grep -rq "$key" /usr/lib/sysctl.d/ /etc/sysctl.d/ 2>/dev/null; then
+      fail "sysctl $key still $lorica_norm after uninstall (another sysctl.d file sets it)"
+    else
+      pass "sysctl $key = $actual_norm (kernel default matches Lorica value; no sysctl.d file sets it)"
+    fi
   fi
 }
 

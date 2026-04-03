@@ -117,6 +117,82 @@ jobs:
           path: packages/*.deb
           retention-days: 30
 
+  compatibility-test:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+
+    steps:
+      - name: Download .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lorica-debs
+          path: debs/
+
+      - name: Install Lorica packages
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ./debs/lorica-keyring_*.deb \
+            ./debs/lorica-base_*.deb \
+            ./debs/lorica-cloud-server_*.deb
+
+      - name: Lynis audit score
+        run: |
+          apt-get install -y --no-install-recommends lynis procps
+          # Run lynis (non-interactive, no color)
+          lynis audit system --no-colors --quick 2>&1 | tee /tmp/lynis-output.txt || true
+          # Extract and display the hardening index
+          echo "=== LYNIS HARDENING INDEX ==="
+          grep -E "Hardening index" /tmp/lynis-output.txt || echo "Could not extract hardening index"
+          echo "=== END LYNIS ==="
+
+      - name: Test nginx compatibility
+        run: |
+          apt-get install -y --no-install-recommends nginx curl
+          nginx
+          sleep 1
+          curl -sf http://localhost/ > /dev/null
+          echo "nginx: OK -- serves pages with Lorica installed"
+          nginx -s stop
+
+      - name: Test PostgreSQL compatibility
+        run: |
+          apt-get install -y --no-install-recommends postgresql postgresql-client
+          pg_ctlcluster 15 main start
+          su - postgres -c "psql -c 'CREATE DATABASE lorica_test;'"
+          su - postgres -c "psql -d lorica_test -c 'CREATE TABLE test (id int); INSERT INTO test VALUES (1); SELECT * FROM test;'"
+          echo "PostgreSQL: OK -- start, create DB, query all work with Lorica installed"
+          pg_ctlcluster 15 main stop
+
+      - name: Test Node.js compatibility
+        run: |
+          apt-get install -y --no-install-recommends nodejs curl
+          # Start a simple HTTP server in the background
+          node -e "require('http').createServer((req,res)=>{res.end('ok')}).listen(3000)" &
+          NODE_PID=$!
+          sleep 1
+          RESULT=$(curl -sf http://localhost:3000/)
+          kill $NODE_PID
+          test "$RESULT" = "ok"
+          echo "Node.js: OK -- HTTP server works with Lorica installed"
+
+      - name: Test apt upgrade does not overwrite configs
+        run: |
+          # Snapshot config checksums before upgrade
+          md5sum /usr/lib/sysctl.d/90-lorica-hardening.conf > /tmp/before.md5
+          md5sum /etc/default/grub.d/50-lorica-hardening.cfg >> /tmp/before.md5
+          md5sum /etc/modprobe.d/30-lorica-blacklist.conf >> /tmp/before.md5
+          md5sum /etc/audit/rules.d/lorica-compliance.rules >> /tmp/before.md5
+
+          # Run a full upgrade
+          apt-get upgrade -y
+
+          # Verify configs unchanged
+          md5sum --check /tmp/before.md5
+          echo "apt upgrade: OK -- Lorica configs survived upgrade unchanged"
+
   publish:
     needs: build-and-test
     if: github.ref == 'refs/heads/main'

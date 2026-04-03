@@ -1,0 +1,84 @@
+Package: lorica-base
+Version: 0.1.0-1
+Architecture: all
+Maintainer: Lorica Linux <lorica@example.com>
+Installed-Size: 41
+Recommends: apparmor, auditd, fail2ban, ufw, unattended-upgrades
+Filename: pool/main/lorica-base_0.1.0-1_all.deb
+Size: 7492
+MD5sum: 4e08096c9266d540f93e6b01032790b4
+SHA1: a57772881ed9bfba91ab878be90eaee54cf14894
+SHA256: c0f8120c5999c78550701beffc1b4358eb19118e15a695a900aef122aad01cc9
+Section: admin
+Priority: optional
+Description: Lorica Linux base hardening configuration
+ Security hardening for Debian servers. Installs drop-in configuration
+ files for sysctl, GRUB boot parameters, kernel module blacklisting,
+ and audit rules. Every setting is documented with its rationale and
+ mapped to compliance frameworks (CIS, PCI-DSS, SOC 2, CNBV).
+ .
+ This package uses drop-in configs in /usr/lib/sysctl.d/,
+ /etc/default/grub.d/, /etc/modprobe.d/, and /etc/audit/rules.d/.
+ It never modifies files owned by other Debian packages.
+
+Package: lorica-cloud-server
+Version: 0.1.0-1
+Architecture: all
+Maintainer: Lorica Linux <lorica@example.com>
+Installed-Size: 8
+Depends: lorica-base, lorica-keyring
+Recommends: cloud-init, fail2ban, unattended-upgrades
+Filename: pool/main/lorica-cloud-server_0.1.0-1_all.deb
+Size: 1452
+MD5sum: af08bdc1ee8f61715a6ca92f39c1ad8f
+SHA1: 654339b1798a1677295ad5ac62825c649fec110b
+SHA256: f54a73b326d517fcb3e748b05671e9cd90055e1432dd7a91e89065579eab148a
+Section: admin
+Priority: optional
+Description: Lorica Linux server meta-package
+ Installs the full Lorica Linux hardening stack for servers.
+ This is the recommended entry point for new installations.
+ .
+ Depends on lorica-base (OS hardening) and lorica-keyring (APT signing key).
+ Recommends cloud-init and security tooling for server environments.
+
+Package: lorica-hardened-profile
+Version: 0.1.0-1
+Architecture: all
+Maintainer: Lorica Linux <lorica@example.com>
+Installed-Size: 18
+Depends: lorica-base
+Filename: pool/main/lorica-hardened-profile_0.1.0-1_all.deb
+Size: 2912
+MD5sum: dd2aaac6863bdc34d028ebec1d80ea1f
+SHA1: f05ecf03d35e47a6ae82e10ccb8d0fe77cc52074
+SHA256: a35844d81bb5afdb665c634d0e2e3cb4b3aae1877b1b35806f3abf034bbffbb1
+Section: admin
+Priority: optional
+Description: Lorica Linux maximum hardening profile
+ Opt-in hardening overrides for high-security environments. Installs
+ sysctl and GRUB drop-in configs that override lorica-base defaults
+ with maximum hardening: panic on kernel warnings, disable SMT,
+ SLUB debug, lockdown=confidentiality, block all ICMP, no ptrace.
+ .
+ WARNING: This profile impacts performance and breaks some debugging
+ workflows. Review docs/hardening-decisions.md before installing.
+ .
+ Install via: apt install lorica-hardened-profile
+
+Package: lorica-keyring
+Version: 0.1.0-1
+Architecture: all
+Maintainer: Lorica Linux <lorica@example.com>
+Installed-Size: 8
+Filename: pool/main/lorica-keyring_0.1.0-1_all.deb
+Size: 1312
+MD5sum: ef4fcfb8da2cd84833062b1f2aeaf18f
+SHA1: c3d413ff148874d2e0580f50cee7195d55ad04b6
+SHA256: 1c9f0f6f66ae6edf92a607c46dad60a70de68b4e777383b8e8e8cc96b5112390
+Section: misc
+Priority: optional
+Description: Lorica Linux archive signing key
+ Contains the GPG signing key used to authenticate
+ packages from the Lorica Linux APT repository.
+

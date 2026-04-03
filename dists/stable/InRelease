@@ -1,0 +1,42 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Architectures: amd64 arm64
+Codename: stable
+Components: main
+Date: Fri, 03 Apr 2026 05:07:23 +0000
+Label: Lorica Linux
+Origin: Lorica Linux
+Suite: stable
+MD5Sum:
+ 89013ab133d8cb035cc241817525b251              154 Release
+ f6c1eccbb47935ed9a0e741991dbb80e             3205 main/binary-amd64/Packages
+ 0fa02c991efb50146bc55b0c44fcd8db             1435 main/binary-amd64/Packages.gz
+ f6c1eccbb47935ed9a0e741991dbb80e             3205 main/binary-arm64/Packages
+ 0fa02c991efb50146bc55b0c44fcd8db             1435 main/binary-arm64/Packages.gz
+SHA1:
+ 9491df3160688bad4cc305a6c8ef072b18479c61              154 Release
+ 32dd7d32dd841d8e9a7ba21d063261f5823d1ab8             3205 main/binary-amd64/Packages
+ d572375a5b75ddc67d1c7042f68f9881e854d0e9             1435 main/binary-amd64/Packages.gz
+ 32dd7d32dd841d8e9a7ba21d063261f5823d1ab8             3205 main/binary-arm64/Packages
+ d572375a5b75ddc67d1c7042f68f9881e854d0e9             1435 main/binary-arm64/Packages.gz
+SHA256:
+ dcadd462e95823b8e8b1740e32891558bf2152ed9d30262f334a294a4b9c958e              154 Release
+ f43d13e0df0360c600e868a4fa0cc36bdbb4bc30617244a74c1a26a239eb7b0e             3205 main/binary-amd64/Packages
+ dd78413577d8e9611bfada60939afae8cb0ce4814f8a26f940cbb4ccc6084fb7             1435 main/binary-amd64/Packages.gz
+ f43d13e0df0360c600e868a4fa0cc36bdbb4bc30617244a74c1a26a239eb7b0e             3205 main/binary-arm64/Packages
+ dd78413577d8e9611bfada60939afae8cb0ce4814f8a26f940cbb4ccc6084fb7             1435 main/binary-arm64/Packages.gz
+SHA512:
+ eded6020bcd870c46e458922fdd23cf9bff438f6363e926d43b4f75993d8e4ebda0395a89efce6c545807b4e4691362049a1174b00c1140f0e1782a162ce6a0f              154 Release
+ 13bddb81ecbe95a6838f200227288dc86b20c9b49993361f048a0563a4b7788256d606ad4120625375f7614d4422767983b968a439ff0d0d5ef97529d19db47d             3205 main/binary-amd64/Packages
+ 42b04dd747c97adf9ad51e7cd52493747a32bdd7fea72e03ff69ae050d5e784ccbaf2263846f1e284469bdb0bdaf9573f3c829e627bd4b96396494653de7d599             1435 main/binary-amd64/Packages.gz
+ 13bddb81ecbe95a6838f200227288dc86b20c9b49993361f048a0563a4b7788256d606ad4120625375f7614d4422767983b968a439ff0d0d5ef97529d19db47d             3205 main/binary-arm64/Packages
+ 42b04dd747c97adf9ad51e7cd52493747a32bdd7fea72e03ff69ae050d5e784ccbaf2263846f1e284469bdb0bdaf9573f3c829e627bd4b96396494653de7d599             1435 main/binary-arm64/Packages.gz
+-----BEGIN PGP SIGNATURE-----
+
+iJwEARYKAEQWIQS0YeJQF7CJs+6ae1tBSv0db4MZDAUCac9LCyYcbG9yaWNhLWxp
+bnV4QHVzZXJzLm5vcmVwbHkuZ2l0aHViLmNvbQAKCRBBSv0db4MZDAMFAQDXeF1X
+r4q5s8BQ8Yxx9xPTZ/l7TMLDY0qAU6ju8oWJrQEAiOEdskA8jSG4IdLnij6CTI0V
++1C/mKZpobn2pGWnzA4=
+=N9Ci
+-----END PGP SIGNATURE-----

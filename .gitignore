@@ -30,4 +30,5 @@ packages/*/debian/*.debhelper.log
 # Plan/memory files (local only)
 lorica-linux-project.md
 v0.1-implementation-plan.md
+TODO.md
 CLAUDE.md

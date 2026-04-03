@@ -111,9 +111,85 @@ jobs:
           echo "Clean uninstall verified."
 
       - name: Upload .deb artifacts
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: lorica-debs
           path: packages/*.deb
           retention-days: 30
+
+  publish:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Install APT repo tools
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev apt-utils gpg
+
+      - name: Download .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lorica-debs
+          path: debs/
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: repo
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Generate APT repository
+        run: |
+          cd repo
+
+          # Clean previous repo contents (keep .git)
+          find . -maxdepth 1 -not -name '.git' -not -name '.' -exec rm -rf {} +
+
+          # Create directory structure
+          mkdir -p pool/main
+          mkdir -p dists/stable/main/binary-amd64
+          mkdir -p dists/stable/main/binary-arm64
+
+          # Copy debs to pool
+          cp ../debs/*.deb pool/main/
+
+          # Export public key for user install step
+          gpg --armor --export "Lorica Linux Package Signing" > lorica-keyring.asc
+
+          # Generate Packages index (paths relative to repo root)
+          dpkg-scanpackages pool/main /dev/null > dists/stable/main/binary-amd64/Packages
+          cp dists/stable/main/binary-amd64/Packages dists/stable/main/binary-arm64/Packages
+          gzip -k dists/stable/main/binary-amd64/Packages
+          gzip -k dists/stable/main/binary-arm64/Packages
+
+          # Generate Release file
+          apt-ftparchive \
+            -o APT::FTPArchive::Release::Origin="Lorica Linux" \
+            -o APT::FTPArchive::Release::Label="Lorica Linux" \
+            -o APT::FTPArchive::Release::Suite="stable" \
+            -o APT::FTPArchive::Release::Codename="stable" \
+            -o APT::FTPArchive::Release::Architectures="amd64 arm64" \
+            -o APT::FTPArchive::Release::Components="main" \
+            release dists/stable > dists/stable/Release
+
+          # Sign Release (InRelease = inline signature, Release.gpg = detached)
+          gpg --default-key "Lorica Linux Package Signing" \
+            --clearsign -o dists/stable/InRelease dists/stable/Release
+          gpg --default-key "Lorica Linux Package Signing" \
+            -abs -o dists/stable/Release.gpg dists/stable/Release
+
+      - name: Deploy to gh-pages
+        run: |
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Update APT repository" || echo "No changes to commit"
+          git push

@@ -364,7 +364,7 @@ check_audit_rule() {
     return
   fi
 
-  if auditctl -l 2>/dev/null | grep -q "$pattern"; then
+  if auditctl -l 2>/dev/null | grep -qF -- "$pattern"; then
     pass "audit: $description"
   else
     fail "audit: $description (pattern '$pattern' not found in auditctl -l)"

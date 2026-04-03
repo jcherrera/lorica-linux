@@ -99,6 +99,7 @@ Tested on Debian 12 (Bookworm) and Debian 13 (Trixie).
 
 - [CONFIG_RATIONALE.md](docs/CONFIG_RATIONALE.md) -- Per-setting rationale for every shipped config
 - [hardening-decisions.md](docs/hardening-decisions.md) -- Source of truth for all hardening decisions, including excluded settings and why
+- [THREAT_MODEL.md](docs/THREAT_MODEL.md) -- What Lorica protects against, what it doesn't, and v0.2 plans
 
 ## Roadmap
 

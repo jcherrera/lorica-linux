@@ -129,21 +129,25 @@ jobs:
         run: |
           cp "packages/lorica-kernel-cloud/${{ matrix.config }}" "$KERNEL_SRC/.config"
 
-      - name: Config drift detection
+      - name: Resolve config and detect drift
         working-directory: ${{ env.KERNEL_SRC }}
         run: |
+          # Save our config for comparison
           cp .config .config.lorica
+          # olddefconfig resolves any new options to their defaults without prompting.
+          # This is required because our config was generated from Debian's build,
+          # and kernel.org source may have slightly different option dependencies.
           make olddefconfig
           if ! diff -u .config.lorica .config > /tmp/config-drift.diff 2>&1; then
-            echo "::warning::Kernel config drift detected -- olddefconfig modified the config."
+            echo "::warning::Config drift detected -- olddefconfig resolved new/changed options."
+            echo "Review the diff below. If any new option needs a non-default value, update apply-hardening.sh."
             echo "::group::Config drift diff"
             cat /tmp/config-drift.diff
             echo "::endgroup::"
-            # Restore our config as authoritative
-            cp .config.lorica .config
           else
             echo "No config drift detected"
           fi
+          # Build with the resolved config (NOT the original -- it may have unresolved options)
 
       - name: Build kernel packages
         working-directory: ${{ env.KERNEL_SRC }}

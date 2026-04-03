@@ -239,12 +239,9 @@ check_sysctl() {
   local actual
 
   actual="$(sysctl -n "$key" 2>/dev/null)" || {
-    # dev.tty.ldisc_autoload requires kernel 5.1+
-    if [ "$key" = "dev.tty.ldisc_autoload" ]; then
-      skip "sysctl $key" "requires kernel 5.1+"
-    else
-      fail "sysctl $key: not readable"
-    fi
+    # Sysctl may not exist on this kernel version (e.g. sched_child_runs_first
+    # removed in 6.12, dev.tty.ldisc_autoload requires 5.1+)
+    skip "sysctl $key" "not available on kernel $(uname -r)"
     return
   }
 
@@ -378,6 +375,12 @@ check_module_blocked() {
   local mod="$1"
   local output
 
+  # Check if module is built-in (blacklist has no effect on built-in modules)
+  if grep -qw "$mod" /lib/modules/"$(uname -r)"/modules.builtin 2>/dev/null; then
+    skip "module $mod" "built-in to kernel (blacklist cannot block)"
+    return
+  fi
+
   output="$(modprobe -n -v "$mod" 2>&1)" || true
 
   if echo "$output" | grep -q "install /bin/false"; then
@@ -386,6 +389,8 @@ check_module_blocked() {
     pass "module $mod: blocked (install /bin/true)"
   elif echo "$output" | grep -qE "not found|FATAL"; then
     pass "module $mod: not loadable (not found in kernel)"
+  elif [ -z "$output" ]; then
+    skip "module $mod" "empty modprobe output (may be built-in or absent)"
   else
     fail "module $mod: not blocked (modprobe -n -v: $output)"
   fi

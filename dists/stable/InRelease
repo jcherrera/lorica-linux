@@ -4,39 +4,39 @@ Hash: SHA512
 Architectures: amd64 arm64
 Codename: stable
 Components: main
-Date: Fri, 03 Apr 2026 05:27:46 +0000
+Date: Fri, 03 Apr 2026 05:33:12 +0000
 Label: Lorica Linux
 Origin: Lorica Linux
 Suite: stable
 MD5Sum:
- e33d1b3cece3c85d552002475d5c497e              154 Release
+ 831ee3a3629a71f629e38d1ad2a06217              154 Release
  f6c1eccbb47935ed9a0e741991dbb80e             3205 main/binary-amd64/Packages
- 39aa920f8f8cdc496786eb85b74ea4a8             1435 main/binary-amd64/Packages.gz
+ a364c2a4b0cb99c5472b0b376a82b40f             1435 main/binary-amd64/Packages.gz
  f6c1eccbb47935ed9a0e741991dbb80e             3205 main/binary-arm64/Packages
- 39aa920f8f8cdc496786eb85b74ea4a8             1435 main/binary-arm64/Packages.gz
+ a364c2a4b0cb99c5472b0b376a82b40f             1435 main/binary-arm64/Packages.gz
 SHA1:
- 4d1faab1d7dad8f97a3960897c783fa4193b322d              154 Release
+ 0803a9106395589dae8314253cb830d5471dacf3              154 Release
  32dd7d32dd841d8e9a7ba21d063261f5823d1ab8             3205 main/binary-amd64/Packages
- 2874b8401b5a3809269421314eb4d15ff11a26a1             1435 main/binary-amd64/Packages.gz
+ 95845ae2c32e70d9781157476e5ece6aace29edc             1435 main/binary-amd64/Packages.gz
  32dd7d32dd841d8e9a7ba21d063261f5823d1ab8             3205 main/binary-arm64/Packages
- 2874b8401b5a3809269421314eb4d15ff11a26a1             1435 main/binary-arm64/Packages.gz
+ 95845ae2c32e70d9781157476e5ece6aace29edc             1435 main/binary-arm64/Packages.gz
 SHA256:
- a6f66f63ad2f2b0e8b52a3cc03d25440513b3e613f3637e00b010fb13d08347a              154 Release
+ 1d1a7240fb032a69b3795f729971c52e734e5f9837a314080fb1c44975d19cbd              154 Release
  f43d13e0df0360c600e868a4fa0cc36bdbb4bc30617244a74c1a26a239eb7b0e             3205 main/binary-amd64/Packages
- 7245ec9131a8a8d285df897eaafe48004eafea9588f28ee98849a9e9b4be4698             1435 main/binary-amd64/Packages.gz
+ fbcfd03195bec82923b1c430aeeacfd15191004c5229bfbdde06328d3eb9ec9a             1435 main/binary-amd64/Packages.gz
  f43d13e0df0360c600e868a4fa0cc36bdbb4bc30617244a74c1a26a239eb7b0e             3205 main/binary-arm64/Packages
- 7245ec9131a8a8d285df897eaafe48004eafea9588f28ee98849a9e9b4be4698             1435 main/binary-arm64/Packages.gz
+ fbcfd03195bec82923b1c430aeeacfd15191004c5229bfbdde06328d3eb9ec9a             1435 main/binary-arm64/Packages.gz
 SHA512:
- c45b25708440177984b327ab6e3dec20b5de557924c69efdb043cda5982eead122a9cea177e8f09955ccdca778f2ef56e0b6e953415190374c41b2218fcebaa7              154 Release
+ d7762a244fd6a08549d075084b3c0090a380283a81e73b993b9139295fe7e28fa826104e36211f9612e78dcfaff9ebb78d87c185a28339a1a5fcab74d99e451f              154 Release
  13bddb81ecbe95a6838f200227288dc86b20c9b49993361f048a0563a4b7788256d606ad4120625375f7614d4422767983b968a439ff0d0d5ef97529d19db47d             3205 main/binary-amd64/Packages
- 1fc3a45578dd7190668b2cc505926c3fe0a4487be1fec8ceff730cff536f3de584924ede15047f2640f66fb8e3f056798b41446a14c65d456ac6d81791ad13c3             1435 main/binary-amd64/Packages.gz
+ 142dab3fb07ea5b306d6f17b18cae965ee248020928a4bd168a51d11a9e3f36f7684891e3e93bfb875eeeac18ffff730abf2c0f1db4ed2271803ab24b9781a9c             1435 main/binary-amd64/Packages.gz
  13bddb81ecbe95a6838f200227288dc86b20c9b49993361f048a0563a4b7788256d606ad4120625375f7614d4422767983b968a439ff0d0d5ef97529d19db47d             3205 main/binary-arm64/Packages
- 1fc3a45578dd7190668b2cc505926c3fe0a4487be1fec8ceff730cff536f3de584924ede15047f2640f66fb8e3f056798b41446a14c65d456ac6d81791ad13c3             1435 main/binary-arm64/Packages.gz
+ 142dab3fb07ea5b306d6f17b18cae965ee248020928a4bd168a51d11a9e3f36f7684891e3e93bfb875eeeac18ffff730abf2c0f1db4ed2271803ab24b9781a9c             1435 main/binary-arm64/Packages.gz
 -----BEGIN PGP SIGNATURE-----
 
-iJwEARYKAEQWIQS0YeJQF7CJs+6ae1tBSv0db4MZDAUCac9P0iYcbG9yaWNhLWxp
-bnV4QHVzZXJzLm5vcmVwbHkuZ2l0aHViLmNvbQAKCRBBSv0db4MZDHU7AP9iRyAc
-cJCEy6elFcfsSKQDqliFbW70hkmKDHKmTrK3SAD/TBf5wWxkNxu1IZVaTnzchvth
-A29FISj5+YGjX0DuSAw=
-=gUpr
+iJwEARYKAEQWIQS0YeJQF7CJs+6ae1tBSv0db4MZDAUCac9RGCYcbG9yaWNhLWxp
+bnV4QHVzZXJzLm5vcmVwbHkuZ2l0aHViLmNvbQAKCRBBSv0db4MZDKLBAQCVh3hL
+ZmfEU+8uC6+e+vrHldRgFZU2v6vunJxsnF9b3AD/VNDOvq61lH9LhsJVEnURjP6X
+mS9ji1AzmjlAeBP/sgY=
+=nkUS
 -----END PGP SIGNATURE-----

@@ -28,6 +28,7 @@ IS_X86=false
 IS_ARM64=false
 GRUB_CFG=""
 HARDENED_STATE_FILE="/var/tmp/lorica-hardened-installed"
+FAILED_CHECKS=""
 
 # Arch-specific GRUB params: these only affect behavior on x86_64
 X86_ONLY_CMDLINE_PARAMS="vsyscall=none"
@@ -159,6 +160,7 @@ pass() {
 
 fail() {
   FAILS=$((FAILS + 1))
+  FAILED_CHECKS="${FAILED_CHECKS}  - $1\n"
   printf "${RED}FAIL${RESET} %s\n" "$1"
 }
 
@@ -735,7 +737,9 @@ print_summary() {
   printf "${BOLD}  RESULTS: %d passed, %d failed, %d skipped${RESET}\n" "$PASSES" "$FAILS" "$SKIPS"
   printf "${BOLD}========================================${RESET}\n"
   if [ "$FAILS" -gt 0 ]; then
-    printf "${RED}SOME CHECKS FAILED${RESET}\n"
+    printf "\n${RED}Failed checks:${RESET}\n"
+    printf "$FAILED_CHECKS"
+    printf "\n${RED}SOME CHECKS FAILED${RESET}\n"
     return 1
   else
     printf "${GREEN}ALL CHECKS PASSED${RESET}\n"

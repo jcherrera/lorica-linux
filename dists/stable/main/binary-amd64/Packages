@@ -28,11 +28,12 @@ Maintainer: Lorica Linux <lorica@example.com>
 Installed-Size: 8
 Depends: lorica-base, lorica-keyring
 Recommends: cloud-init, fail2ban, unattended-upgrades
+Suggests: lorica-kernel-cloud
 Filename: pool/main/lorica-cloud-server_0.1.0-1_all.deb
-Size: 1452
-MD5sum: af08bdc1ee8f61715a6ca92f39c1ad8f
-SHA1: 654339b1798a1677295ad5ac62825c649fec110b
-SHA256: f54a73b326d517fcb3e748b05671e9cd90055e1432dd7a91e89065579eab148a
+Size: 1468
+MD5sum: 64bb81470cac783d26c912e71a9f349d
+SHA1: 6bc9ebb7cee90799eb13994b4c23e7c34cd497d7
+SHA256: 3376d0e5fe843ab5c234d9fb9ae1dbab627c139e939db6221423db48a2aa521a
 Section: admin
 Priority: optional
 Description: Lorica Linux server meta-package

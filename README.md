@@ -26,7 +26,7 @@ It is **not** a fork. It is a thin collection of hardening configurations, meta-
 
 ```bash
 # Add Lorica signing key and repository
-curl -fsSL https://jcherrera.github.io/lorica-linux/lorica-keyring.asc | sudo tee /usr/share/keyrings/lorica.asc > /dev/null
+sudo wget -q -O /usr/share/keyrings/lorica.asc https://jcherrera.github.io/lorica-linux/lorica-keyring.asc
 echo "deb [signed-by=/usr/share/keyrings/lorica.asc] https://jcherrera.github.io/lorica-linux stable main" \
   | sudo tee /etc/apt/sources.list.d/lorica.list > /dev/null
 

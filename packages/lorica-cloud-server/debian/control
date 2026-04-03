@@ -9,6 +9,7 @@ Package: lorica-cloud-server
 Architecture: all
 Depends: lorica-base, lorica-keyring, ${misc:Depends}
 Recommends: cloud-init, fail2ban, unattended-upgrades
+Suggests: lorica-kernel-cloud
 Description: Lorica Linux server meta-package
  Installs the full Lorica Linux hardening stack for servers.
  This is the recommended entry point for new installations.

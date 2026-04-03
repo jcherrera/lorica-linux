@@ -1,0 +1,5 @@
+lorica-kernel-cloud (6.12.74-lorica-1) stable; urgency=low
+
+  * Initial release: hardened cloud kernel based on Linux 6.12.74 LTS.
+
+ -- Lorica Linux <lorica@example.com>  Wed, 02 Apr 2026 00:00:00 +0000

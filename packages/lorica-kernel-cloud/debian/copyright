@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Linux kernel
+Upstream-Contact: linux-kernel@vger.kernel.org
+
+Files: *
+Copyright: Linus Torvalds and kernel contributors
+License: GPL-2.0
+ See /usr/share/common-licenses/GPL-2 for the full license text.
+
+Files: debian/*
+Copyright: 2026 Lorica Linux
+License: GPL-2.0
+ See /usr/share/common-licenses/GPL-2 for the full license text.

@@ -1,0 +1,200 @@
+name: Build Hardened Kernel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/lorica-kernel-cloud/**'
+      - 'KERNEL_VERSION'
+      - '.github/workflows/build-kernel.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/lorica-kernel-cloud/**'
+      - 'KERNEL_VERSION'
+      - '.github/workflows/build-kernel.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            config: config-amd64
+            boot_test: true
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            config: config-arm64
+            boot_test: false
+    runs-on: ${{ matrix.runner }}
+    # Kernel builds with GCC plugins take 30-40 minutes per arch.
+    # 120 minutes allows headroom for first build without ccache.
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read kernel version
+        id: kver
+        run: |
+          KVER=$(tr -d '[:space:]' < KERNEL_VERSION)
+          echo "version=$KVER" >> "$GITHUB_OUTPUT"
+          echo "Kernel version: $KVER"
+
+      - name: Install build dependencies
+        run: |
+          GCC_VER=$(gcc -dumpversion | cut -d. -f1)
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            bc \
+            kmod \
+            cpio \
+            flex \
+            bison \
+            libssl-dev \
+            libelf-dev \
+            dwarves \
+            python3 \
+            "gcc-${GCC_VER}-plugin-dev" \
+            ccache \
+            wget \
+            gnupg
+
+      - name: Install QEMU and virtme-ng
+        if: matrix.boot_test
+        run: |
+          sudo apt-get install -y --no-install-recommends qemu-system-x86
+          sudo pip3 install --break-system-packages virtme-ng
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ matrix.arch }}-${{ steps.kver.outputs.version }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.arch }}-${{ steps.kver.outputs.version }}-
+            ccache-${{ matrix.arch }}-
+
+      - name: Configure ccache
+        run: |
+          echo "/usr/lib/ccache" >> "$GITHUB_PATH"
+          ccache --max-size=2G
+          ccache --zero-stats
+
+      - name: Download kernel tarball
+        env:
+          KVER: ${{ steps.kver.outputs.version }}
+        run: |
+          MAJOR=$(echo "$KVER" | cut -d. -f1)
+          wget -q --tries=3 --waitretry=10 \
+            "https://cdn.kernel.org/pub/linux/kernel/v${MAJOR}.x/linux-${KVER}.tar.xz"
+          wget -q --tries=3 --waitretry=10 \
+            "https://cdn.kernel.org/pub/linux/kernel/v${MAJOR}.x/linux-${KVER}.tar.sign"
+
+      - name: Verify GPG signature
+        env:
+          KVER: ${{ steps.kver.outputs.version }}
+        run: |
+          # Import Greg KH's and Linus's keys (try two keyservers)
+          gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys \
+            647F28654894E3BD457199BE38DBBDC86092693E \
+            ABAF11C65A2970B130ABE3C479BE3E4300411886 \
+            || gpg --keyserver hkps://keys.openpgp.org --recv-keys \
+              647F28654894E3BD457199BE38DBBDC86092693E \
+              ABAF11C65A2970B130ABE3C479BE3E4300411886
+
+          # Decompress for signature verification (.tar.sign signs the .tar, not .tar.xz)
+          xz -dk "linux-${KVER}.tar.xz"
+
+          # Verify signature -- MUST succeed for a security project
+          gpg --verify "linux-${KVER}.tar.sign" "linux-${KVER}.tar"
+          echo "GPG signature verified successfully"
+
+          # Clean up uncompressed tar to save disk
+          rm -f "linux-${KVER}.tar"
+
+      - name: Extract kernel source
+        env:
+          KVER: ${{ steps.kver.outputs.version }}
+        run: |
+          tar xf "linux-${KVER}.tar.xz"
+          echo "KERNEL_SRC=${{ github.workspace }}/linux-${KVER}" >> "$GITHUB_ENV"
+
+      - name: Copy kernel config
+        run: |
+          cp "packages/lorica-kernel-cloud/${{ matrix.config }}" "$KERNEL_SRC/.config"
+
+      - name: Config drift detection
+        working-directory: ${{ env.KERNEL_SRC }}
+        run: |
+          cp .config .config.lorica
+          make olddefconfig
+          if ! diff -u .config.lorica .config > /tmp/config-drift.diff 2>&1; then
+            echo "::warning::Kernel config drift detected -- olddefconfig modified the config."
+            echo "::group::Config drift diff"
+            cat /tmp/config-drift.diff
+            echo "::endgroup::"
+            # Restore our config as authoritative
+            cp .config.lorica .config
+          else
+            echo "No config drift detected"
+          fi
+
+      - name: Build kernel packages
+        working-directory: ${{ env.KERNEL_SRC }}
+        env:
+          KVER: ${{ steps.kver.outputs.version }}
+        run: |
+          set -o pipefail
+          make bindeb-pkg \
+            LOCALVERSION=-lorica \
+            KDEB_PKGVERSION="${KVER}-lorica-1" \
+            -j"$(nproc)" \
+            2>&1 | tee /tmp/kernel-build.log | tail -200
+
+      - name: Show ccache stats
+        if: always()
+        run: ccache --show-stats
+
+      - name: Collect and validate .deb artifacts
+        run: |
+          mkdir -p "kernel-debs-${{ matrix.arch }}"
+          # bindeb-pkg places .debs in the parent of the kernel source directory
+          cp "$KERNEL_SRC"/../linux-image-*.deb "kernel-debs-${{ matrix.arch }}/"
+          cp "$KERNEL_SRC"/../linux-headers-*.deb "kernel-debs-${{ matrix.arch }}/" || true
+          echo "Collected artifacts:"
+          ls -lh "kernel-debs-${{ matrix.arch }}/"
+          # Validate linux-image .deb exists (mandatory artifact)
+          test -n "$(ls kernel-debs-${{ matrix.arch }}/linux-image-*.deb 2>/dev/null)" \
+            || { echo "::error::No linux-image .deb found"; exit 1; }
+
+      - name: QEMU boot test (virtme-ng)
+        if: matrix.boot_test
+        working-directory: ${{ env.KERNEL_SRC }}
+        continue-on-error: true
+        run: |
+          BOOT_OUTPUT=$(timeout 120 vng --run \
+            --kdir . \
+            -- "uname -r && cat /proc/cmdline && echo LORICA_BOOT_OK" 2>&1) \
+            || true
+
+          echo "$BOOT_OUTPUT"
+
+          if echo "$BOOT_OUTPUT" | grep -q "LORICA_BOOT_OK"; then
+            echo "Boot test PASSED"
+          else
+            echo "::warning::Boot test did not produce LORICA_BOOT_OK -- virtme-ng may have issues in CI"
+            exit 1
+          fi
+
+      - name: Upload kernel .deb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-debs-${{ matrix.arch }}
+          path: kernel-debs-${{ matrix.arch }}/*.deb
+          retention-days: 30

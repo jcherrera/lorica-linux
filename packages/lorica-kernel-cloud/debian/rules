@@ -1,0 +1,5 @@
+#!/usr/bin/make -f
+# lorica-kernel-cloud is built by make bindeb-pkg in CI, not by this rules file.
+# This debian/ directory exists for project structure consistency.
+%:
+	dh $@

@@ -167,7 +167,7 @@ Or manually: copy the hardened profile sysctl and GRUB overrides from
 | Setting | Value (Base) | Value (Hardened) | Description | Source | Decision | Profile |
 |---------|-------------|-----------------|-------------|--------|----------|---------|
 | `kernel.yama.ptrace_scope` | `2` | `3` | Restrict ptrace (2=CAP_SYS_PTRACE, 3=no attach) | KSPP, Kicksecure | INCLUDE | BASE |
-| `kernel.sched_child_runs_first` | `1` | `1` | Run child process before parent after fork() | Kicksecure | INCLUDE | BASE |
+| `kernel.sched_child_runs_first` | `1` | — | ~~Run child process before parent after fork()~~ Removed: EEVDF scheduler (kernel 6.12+) dropped this sysctl | Kicksecure | REMOVED | — |
 | `kernel.panic` | `10` | `10` | Auto-reboot 10s after kernel panic | Best practice | INCLUDE | BASE |
 
 **Compliance:** CIS 1.5.2 (ptrace), PCI-DSS 2.2, SOC 2 CC6.1
@@ -177,10 +177,10 @@ Or manually: copy the hardened profile sysctl and GRUB overrides from
   unprivileged `strace` does not. KSPP recommends `3` (no attach at all), but that
   breaks too many debugging workflows for a production default. Hardened profile
   escalates to `3`.
-- `sched_child_runs_first=1`: After `fork()`, the child process runs before the parent.
-  This makes fork-based race condition exploits slightly harder by reducing the window
-  where the parent can manipulate shared state before the child executes. Low cost,
-  no compatibility impact.
+- `sched_child_runs_first`: **Removed.** Previously set to `1` (Kicksecure default) to run
+  the child process before the parent after `fork()`. The EEVDF scheduler (kernel 6.12+,
+  shipped in Debian 13) dropped this sysctl entirely. Setting it has no effect and produces
+  a warning on newer kernels.
 - `panic=10`: If the kernel panics, reboot after 10 seconds rather than hanging
   indefinitely. On cloud servers behind load balancers, a fast reboot is preferable
   to a hung instance. Kicksecure uses `panic=-1` (disabled, delegates to systemd);
@@ -637,6 +637,10 @@ workloads. These rules are written to `/etc/audit/rules.d/lorica-compliance.rule
 attacker could use 32-bit syscall numbers to bypass 64-bit-only audit rules. File-watch
 rules (`-w`) do not need arch specifiers. This is a CIS benchmark requirement.
 
+**arm64 note:** On arm64, the `b64` syscall rules use the `*at` variants (e.g., `openat`
+instead of `open`, `renameat` instead of `rename`) because arm64 kernels only implement
+the `*at` family. The `b32` rules remain unchanged as they target the 32-bit compat layer.
+
 ### 4.1 Identity and Access Changes
 
 | Rule | What it monitors | Source | CIS # | PCI-DSS |
@@ -866,11 +870,12 @@ logging to cover their tracks.
 | `core_pattern` | not set | `\|/bin/false` | Lorica addition: belt-and-suspenders core dump prevention |
 | `default_qdisc` + `tcp_congestion_control` | not set | `fq` + `bbr` | Lorica addition: modern congestion control for cloud servers |
 | `/tmp` execve audit | not set | monitored | Lorica addition: detect attacker binary drops in world-writable dirs |
+| `sched_child_runs_first` | `1` (enabled) | Removed | EEVDF scheduler (kernel 6.12+) dropped this sysctl |
 
 ### Open Items for Step 3
 
-- [ ] **HARD REQUIREMENT:** Validate `io_uring_disabled` sysctl on target kernel. If Debian 12 (kernel 6.1), must use `io_uring_group=-1` instead. The sysctl config or postinst script must detect kernel version and apply the correct knob. A silently failing sysctl that leaves io_uring enabled is a false sense of security.
-- [ ] Verify `dev.tty.ldisc_autoload` is available on target kernel (requires 5.1+)
-- [ ] Test `lockdown=integrity` on stock Debian kernel -- confirm it doesn't break cloud agents
-- [ ] Determine exact privileged binary paths on Debian 13 (Trixie) for audit rules
-- [ ] Test `oops=panic` on Debian stock kernel -- confirm clean reboot behavior
+- [x] **HARD REQUIREMENT:** Validate `io_uring_disabled` sysctl on target kernel. Resolved: `postinst` detects kernel version and writes `io_uring_disabled=1` (kernel 6.4+) or `io_uring_group=-1` (older kernels) to `/etc/sysctl.d/91-lorica-io-uring.conf`. Validated on Debian 13 arm64.
+- [x] Verify `dev.tty.ldisc_autoload` is available on target kernel (requires 5.1+). Confirmed available on Debian 13 (kernel 6.12).
+- [x] Test `lockdown=integrity` on stock Debian kernel -- confirmed no cloud agent breakage on Debian 13 arm64.
+- [ ] Determine exact privileged binary paths on Debian 13 (Trixie) for audit rules (audit rules use generic paths; not blocking)
+- [x] Test `oops=panic` on Debian stock kernel -- confirmed clean reboot behavior on Debian 13 arm64.

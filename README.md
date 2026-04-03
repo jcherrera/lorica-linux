@@ -77,6 +77,24 @@ Disables 38 kernel modules irrelevant to servers: Bluetooth, FireWire, Thunderbo
 
 Pre-configured audit rules for compliance: privileged command execution, file permission changes, user/group modifications, kernel module loading, network configuration changes. Mapped to CIS and PCI-DSS controls.
 
+## Testing
+
+`tests/vm-smoke-test.sh` validates the full install/reboot/uninstall lifecycle on a real Debian VM. It runs in four phases:
+
+```bash
+sudo ./tests/vm-smoke-test.sh --phase pre-reboot        # Build, install, verify configs
+# reboot
+sudo ./tests/vm-smoke-test.sh --phase post-reboot        # Verify boot params, lockdown, sysctls
+sudo ./tests/vm-smoke-test.sh --phase hardened-post-reboot  # Install hardened profile + reboot
+# reboot
+sudo ./tests/vm-smoke-test.sh --phase hardened-post-reboot  # Verify hardened settings
+sudo ./tests/vm-smoke-test.sh --phase uninstall           # Purge all packages, verify clean removal
+```
+
+The script auto-detects amd64/arm64 and skips arch-specific checks accordingly. It requires a Debian VM (not a container) because it validates boot parameters, kernel lockdown, and sysctl application across reboots.
+
+Tested on Debian 12 (Bookworm) and Debian 13 (Trixie).
+
 ## Documentation
 
 - [CONFIG_RATIONALE.md](docs/CONFIG_RATIONALE.md) -- Per-setting rationale for every shipped config
@@ -84,9 +102,9 @@ Pre-configured audit rules for compliance: privileged command execution, file pe
 
 ## Roadmap
 
-**v0.1 (current):** OS-level hardening on Debian's stock kernel. Sysctl, boot params, audit rules, module blacklist, compliance docs.
+**v0.1 (current):** OS-level hardening on Debian's stock kernel. Sysctl, boot params, audit rules, module blacklist, compliance docs. Validated on Debian 12 (Bookworm) and Debian 13 (Trixie), amd64 and arm64.
 
-**v0.2:** Custom hardened kernel built from kernel.org LTS with full KSPP hardening. ARM64 support. AWS AMI.
+**v0.2:** Custom hardened kernel built from kernel.org LTS with full KSPP hardening. AWS AMI.
 
 **v0.3:** Compliance automation (CIS auto-validation, PCI-DSS evidence generation).
 

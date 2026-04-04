@@ -879,3 +879,149 @@ logging to cover their tracks.
 - [x] Test `lockdown=integrity` on stock Debian kernel -- confirmed no cloud agent breakage on Debian 13 arm64.
 - [ ] Determine exact privileged binary paths on Debian 13 (Trixie) for audit rules (audit rules use generic paths; not blocking)
 - [x] Test `oops=panic` on Debian stock kernel -- confirmed clean reboot behavior on Debian 13 arm64.
+
+---
+
+## 6. Kernel Hardening Config (v0.2)
+
+> This section documents the compile-time kernel hardening applied by `lorica-kernel-cloud`.
+> The custom kernel is built from kernel.org 6.12 LTS, starting from Debian 13's cloud config
+> and applying KSPP hardening via `packages/lorica-kernel-cloud/apply-hardening.sh`.
+> Full rationale: `docs/plans/v0.2-kernel-plan.md`.
+
+### 6.1 KSPP Memory Hardening
+
+| Setting | Value | Description | Source | Decision | Profile |
+|---------|-------|-------------|--------|----------|---------|
+| `CONFIG_INIT_ON_ALLOC_DEFAULT_ON` | `y` | Zero-fill heap allocations | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_INIT_ON_FREE_DEFAULT_ON` | `y` | Zero-fill freed memory | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_INIT_STACK_ALL_ZERO` | `y` | Zero-fill stack variables | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_HARDENED_USERCOPY` | `y` | Bounds-check user/kernel copies | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_FORTIFY_SOURCE` | `y` | Compile-time buffer overflow detection | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_STACKPROTECTOR_STRONG` | `y` | Stack canaries (strong variant) | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_SLAB_FREELIST_RANDOM` | `y` | Randomize slab freelist | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_SLAB_FREELIST_HARDENED` | `y` | Harden slab metadata against overwrite | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_SHUFFLE_PAGE_ALLOCATOR` | `y` | Randomize page allocator freelists | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_VMAP_STACK` | `y` | Guard pages for kernel stacks | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_PAGE_TABLE_CHECK` | `y` | Detect page table corruption | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_PAGE_TABLE_CHECK_ENFORCED` | `y` | Enforce page table integrity checks | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_ZERO_CALL_USED_REGS` | `y` | Clear registers on function return (ROP mitigation) | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_RANDOM_KMALLOC_CACHES` | `y` | Randomize kmalloc cache selection | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_SLAB_BUCKETS` | `y` | Isolate slab allocations by size | KSPP | INCLUDE | BASE |
+| `CONFIG_LIST_HARDENED` | `y` | Harden linked list operations | KSPP | INCLUDE | BASE |
+| `CONFIG_BUG_ON_DATA_CORRUPTION` | `y` | Panic on detected data corruption | KSPP | INCLUDE | BASE |
+| `CONFIG_KFENCE` | `y` | Kernel Electric Fence (use-after-free detection) | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_RANDOMIZE_BASE` | `y` | KASLR | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_RANDOMIZE_MEMORY` | `y` | Memory layout randomization | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_RANDOMIZE_KSTACK_OFFSET_DEFAULT` | `y` | Default-on kernel stack offset randomization | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_DEFAULT_MMAP_MIN_ADDR` | `65536` | Block low-address mmap exploits | KSPP | INCLUDE (Debian default) | BASE |
+
+**Notes:**
+- `INIT_ON_FREE_DEFAULT_ON`: Not set by Debian. Adds 3-5% overhead. Prevents data recovery from freed memory. Documented as the first knob to disable for performance-sensitive workloads.
+- `PAGE_TABLE_CHECK_ENFORCED`: Detects page table corruption that could indicate exploitation. Not enabled by Debian.
+- `ZERO_CALL_USED_REGS`: Clears CPU registers on function return, making ROP gadgets less reliable. ~1% overhead.
+
+---
+
+### 6.2 GCC Security Plugins
+
+| Setting | Value | Description | Source | Decision | Profile |
+|---------|-------|-------------|--------|----------|---------|
+| `CONFIG_GCC_PLUGINS` | `y` | Enable GCC plugin infrastructure | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_GCC_PLUGIN_STACKLEAK` | `y` | Clear kernel stack on syscall return | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_GCC_PLUGIN_LATENT_ENTROPY` | `y` | Extra entropy from compiler-generated randomness | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_RANDSTRUCT_FULL` | `y` | Randomize struct layout (compiler-agnostic) | KSPP | INCLUDE (Lorica delta) | BASE |
+
+**Notes:**
+- **STACKLEAK** clears the kernel stack on every syscall return, preventing data from leaking between syscalls. ~1% overhead on typical server workloads, up to ~4% on syscall-heavy benchmarks.
+- **LATENT_ENTROPY** adds extra entropy during boot from compiler-generated random data. No meaningful performance impact.
+- **RANDSTRUCT_FULL** randomizes the layout of kernel structs at compile time. Breaks out-of-tree modules that assume fixed struct offsets (DKMS, NVIDIA). All in-tree modules (cloud drivers, Docker, etc.) are unaffected since they're compiled with the same randomization seed.
+- **GCC vs Clang decision:** GCC chosen for v0.2 because it matches Debian's toolchain (zero complexity), provides all three plugins above, and x86_64 gets hardware IBT for free. Clang's kCFI and Shadow Call Stack will be evaluated for v0.3, primarily for arm64/Graviton where they provide the strongest benefit.
+
+---
+
+### 6.3 Module Signing
+
+| Setting | Value | Description | Source | Decision | Profile |
+|---------|-------|-------------|--------|----------|---------|
+| `CONFIG_MODULE_SIG` | `y` | Enable module signature verification | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_MODULE_SIG_ALL` | `y` | Sign all in-tree modules during build | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_MODULE_SIG_SHA512` | `y` | Use SHA-512 for module signatures | KSPP | INCLUDE (Lorica delta) | BASE |
+
+**Notes:**
+- Debian enables `MODULE_SIG` but uses SHA-256. Lorica upgrades to SHA-512 and explicitly disables all weaker hashes (SHA-1, SHA-224, SHA-256, SHA-384, SHA3 variants).
+- **BASE profile**: Permissive -- unsigned modules are logged but not blocked. All cloud-relevant modules (ENA, NVMe, Virtio, overlay, br_netfilter) are in-tree and signed automatically.
+- **HARDENED profile**: `module.sig_enforce=1` boot parameter blocks unsigned modules. `kernel.modules_disabled=1` sysctl locks module loading post-boot.
+- Signing key is ephemeral per build (standard practice for distribution kernels).
+
+---
+
+### 6.4 Lockdown & Access Control
+
+| Setting | Value | Description | Source | Decision | Profile |
+|---------|-------|-------------|--------|----------|---------|
+| `CONFIG_SECURITY_LOCKDOWN_LSM` | `y` | Kernel lockdown support | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_SECURITY_LOCKDOWN_LSM_EARLY` | `y` | Enable lockdown early in init | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY` | `y` | Force integrity lockdown at boot | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_IOMMU_DEFAULT_DMA_STRICT` | `y` | Strict DMA (prevent DMA attacks) | KSPP | INCLUDE (Lorica delta) | BASE |
+| `CONFIG_STRICT_DEVMEM` | `y` | Restrict /dev/mem access | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_IO_STRICT_DEVMEM` | `y` | Restrict /dev/port access | KSPP | INCLUDE (Debian default) | BASE |
+| `CONFIG_DEBUG_WX` | `y` | Detect W+X pages at boot | KSPP | INCLUDE (Debian default) | BASE |
+
+**Notes:**
+- Debian sets lockdown to `NONE` by default. Lorica forces `INTEGRITY` at compile time, which prevents unsigned code from running in kernel space.
+- `IOMMU_DEFAULT_DMA_STRICT`: Debian defaults to lazy DMA. Strict DMA prevents DMA-based attacks from hardware devices.
+
+---
+
+### 6.5 Dangerous Features Disabled
+
+| Setting | Value | Description | Source | Decision | Profile |
+|---------|-------|-------------|--------|----------|---------|
+| `CONFIG_KEXEC` | `n` | Disable kexec (runtime kernel replacement) | KSPP | DISABLE | BASE |
+| `CONFIG_KEXEC_FILE` | `n` | Disable file-based kexec | KSPP | DISABLE | BASE |
+| `CONFIG_HIBERNATION` | `n` | No hibernation on servers | KSPP | DISABLE | BASE |
+| `CONFIG_PROC_KCORE` | `n` | Don't expose kernel memory via /proc | KSPP | DISABLE | BASE |
+| `CONFIG_DEVMEM` | `n` | No /dev/mem raw memory access | KSPP | DISABLE | BASE |
+| `CONFIG_LDISC_AUTOLOAD` | `n` | Prevent TTY line discipline autoloading | KSPP | DISABLE | BASE |
+| `CONFIG_USERFAULTFD` | `n` | Remove use-after-free exploit primitive | KSPP | DISABLE | BASE |
+| `CONFIG_BINFMT_MISC` | `n` | No arbitrary binary format handlers | KSPP | DISABLE | BASE |
+| `CONFIG_IP_DCCP` | `n` | Remove rarely-used protocol (CVE source) | KSPP | DISABLE | BASE |
+| `CONFIG_IP_SCTP` | `n` | Remove rarely-used protocol (large surface) | KSPP | DISABLE | BASE |
+| `CONFIG_LEGACY_TIOCSTI` | `n` | Disable TTY injection | KSPP | DISABLE (Debian default) | BASE |
+| `CONFIG_COMPAT_BRK` | `n` | Don't bypass heap ASLR | KSPP | DISABLE (Debian default) | BASE |
+| `CONFIG_ACPI_CUSTOM_METHOD` | `n` | No arbitrary ACPI writes | KSPP | DISABLE | BASE |
+
+**Notes:**
+- These are disabled at compile time, not just via sysctl. v0.1 already disables kexec, userfaultfd, and ldisc_autoload via sysctl, but compile-time removal is stronger (no bypass possible even with CAP_SYS_ADMIN).
+- `DEVMEM=n` removes /dev/mem entirely. STRICT_DEVMEM is also set as defense-in-depth for any code paths that check it.
+- `IP_DCCP` and `IP_SCTP` are already blacklisted via modprobe in v0.1. Compile-time removal ensures they cannot be loaded even if the blacklist is bypassed.
+
+---
+
+### 6.6 Driver Stripping
+
+The custom kernel removes entire subsystems irrelevant to cloud VMs at compile time. This reduces kernel attack surface beyond what module blacklisting can achieve (no code exists to exploit).
+
+| Category | Disabled Configs | Rationale |
+|----------|-----------------|-----------|
+| Bluetooth | `BT`, `BT_BREDR`, `BT_LE` | No wireless on cloud VMs (already disabled by Debian cloud) |
+| WiFi | `CFG80211`, `MAC80211`, `WLAN` | No wireless on cloud VMs |
+| Sound | `SOUND`, `SND` | No audio on headless servers (already disabled by Debian cloud) |
+| GPU/Display | `DRM`, `FB`, `VGA_CONSOLE` | No display on headless servers (already disabled by Debian cloud) |
+| USB HID | `USB_HID`, `HID_GENERIC` | No physical input devices on cloud VMs |
+| Input devices | `INPUT_JOYSTICK`, `INPUT_TOUCHSCREEN`, `INPUT_TABLET` | No physical input on servers |
+| Media/Video | `MEDIA_SUPPORT`, `VIDEO_DEV` | No cameras or capture devices |
+| IR/NFC | `RC_CORE`, `NFC` | No IR remotes or NFC on servers |
+| FireWire | `FIREWIRE` | No FireWire on cloud VMs (already disabled by Debian cloud) |
+| Thunderbolt | `THUNDERBOLT` | No Thunderbolt on cloud VMs |
+| Legacy buses | `PCMCIA`, `ISA` | No PCMCIA or ISA on cloud VMs |
+| Legacy protocols | `DECNET`, `IPX`, `APPLETALK`, `ATALK`, `ATM`, `X25` | Obsolete network protocols |
+| Legacy filesystems | `NTFS_FS`, `NTFS3_FS`, `HFS_FS`, `HFSPLUS_FS`, `JFS_FS`, `REISERFS_FS`, `UFS_FS`, `MINIX_FS` | Not server filesystems |
+| Amateur radio | `HAMRADIO`, `AX25` | Irrelevant |
+| Industrial I/O | `IIO` | No sensors or ADCs on cloud VMs |
+| Parallel/Floppy | `PARPORT`, `FLOPPY` | Legacy hardware |
+
+**What is kept:** Virtio (full suite), AWS ENA + Xen, GCP GVE, Azure Hyper-V, NVMe, SCSI, device-mapper, ext4, XFS, Btrfs (module), overlayfs, FUSE, netfilter/nftables, IPVS, container networking (veth, bridge, macvlan, vxlan), WireGuard, cgroups v2, all namespaces, seccomp-BPF, eBPF (hardened via sysctl), AppArmor, SELinux, audit.
+
+**eBPF decision:** Kept enabled (unlike Kicksecure which disables it). Cilium, Falco, and systemd require eBPF. Hardened via existing sysctl: `unprivileged_bpf_disabled=1`, `bpf_jit_harden=2`.

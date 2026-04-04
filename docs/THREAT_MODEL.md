@@ -1,6 +1,6 @@
 # Lorica Linux Threat Model
 
-> This document describes what Lorica v0.1 protects against, what it does not, and what changes in v0.2. It reflects the actual shipped state: OS-level hardening on Debian's stock kernel.
+> This document describes what Lorica protects against and what it does not. v0.1 provides OS-level hardening on Debian's stock kernel. v0.2 adds an optional custom hardened kernel (`lorica-kernel-cloud`) with compile-time KSPP protections.
 
 ## Target Environment
 
@@ -109,17 +109,31 @@ These are real threats that Lorica does not address. Use complementary tools:
 | DDoS beyond SYN floods | Requires network-level mitigation | Cloud provider DDoS protection, CDNs |
 | Insider threats with root access | Root can bypass all OS hardening | Separation of duties, audit logging (Lorica helps detect, not prevent) |
 
-### Limitations of v0.1 (Addressed in v0.2)
+### v0.2 Kernel Hardening (lorica-kernel-cloud)
 
-v0.1 ships on Debian's **stock kernel**. This means several kernel-level hardening measures are not yet available:
+The optional `lorica-kernel-cloud` package provides a custom kernel built from kernel.org 6.12 LTS with compile-time hardening that Debian's stock kernel does not include:
 
-| Limitation | Why it matters | v0.2 plan |
-|------------|---------------|-----------|
-| No signed kernel modules | Attackers with root can load arbitrary modules | Custom kernel with `MODULE_SIG_FORCE=y` |
-| No struct layout randomization | Kernel exploits can rely on known struct offsets | Custom kernel with `GCC_PLUGIN_RANDSTRUCT=y` |
-| No stack leak prevention | Kernel stack may leak data between syscalls | Custom kernel with `GCC_PLUGIN_STACKLEAK=y` |
-| No Control-Flow Integrity | Kernel ROP/JOP attacks not mitigated at compile level | Evaluate Clang CFI in custom kernel |
-| Stock kernel attack surface | Debian's kernel includes many drivers Lorica doesn't need | Stripped cloud-only kernel config |
+| Mitigation | Config | What it prevents |
+|------------|--------|------------------|
+| Struct layout randomization | `RANDSTRUCT_FULL` | Breaks exploit assumptions about kernel data structure offsets |
+| Stack leak prevention | `GCC_PLUGIN_STACKLEAK` | Clears kernel stack on every syscall return, preventing cross-syscall data leaks |
+| Signed kernel modules | `MODULE_SIG=y`, `MODULE_SIG_SHA512` | All in-tree modules signed; unsigned module loading logged (enforced in HARDENED profile) |
+| Kernel lockdown (compile-time) | `LOCK_DOWN_KERNEL_FORCE_INTEGRITY` | Prevents unsigned code from running in kernel space, enforced at boot |
+| Driver stripping | Cloud-only config | Bluetooth, WiFi, sound, GPU, USB HID, legacy protocols/filesystems removed at compile time |
+| Kexec disabled | `CONFIG_KEXEC=n` | Runtime kernel replacement blocked at compile time (not just sysctl) |
+| /dev/mem removed | `CONFIG_DEVMEM=n` | Raw memory access eliminated entirely |
+| /proc/kcore removed | `CONFIG_PROC_KCORE=n` | Kernel memory exposure via /proc eliminated |
+| userfaultfd removed | `CONFIG_USERFAULTFD=n` | Key use-after-free exploit primitive removed at compile time |
+| Page table integrity | `PAGE_TABLE_CHECK_ENFORCED` | Detects page table corruption |
+| Register clearing | `ZERO_CALL_USED_REGS` | Clears CPU registers on function return, mitigating ROP attacks |
+| Extra entropy | `GCC_PLUGIN_LATENT_ENTROPY` | Additional entropy sources from compiler-generated randomness |
+
+**What remains out of scope with v0.2:**
+
+| Limitation | Status | Plan |
+|------------|--------|------|
+| No Control-Flow Integrity (CFI) | GCC cannot provide kCFI | Evaluate Clang CFI in v0.3 (primarily benefits arm64/Graviton) |
+| No runtime integrity monitoring | Compile-time only | LKRG planned as optional package |
 
 ## Assumptions
 

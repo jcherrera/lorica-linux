@@ -9,8 +9,9 @@ It is **not** a fork. It is a thin collection of hardening configurations, meta-
 ## What You Get
 
 - Hardened OS defaults: sysctl, boot parameters, kernel module restrictions
+- Custom hardened kernel (opt-in): built from kernel.org 6.12 LTS with full KSPP hardening, stripped for cloud workloads
 - Audit rules mapped to compliance frameworks (CIS, PCI-DSS, SOC 2, CNBV)
-- Minimal attack surface: 38 unnecessary kernel modules disabled, uncommon protocols blocked
+- Minimal attack surface: 38 unnecessary kernel modules disabled, uncommon protocols blocked, cloud-irrelevant drivers stripped from custom kernel
 - Two profiles: production-safe defaults (lorica-base) and maximum hardening (lorica-hardened-profile)
 - Documented rationale for every security decision
 - Clean install/uninstall: Lorica uses drop-in configs, never modifies Debian-owned files
@@ -37,6 +38,29 @@ sudo apt install lorica-cloud-server
 # Reboot to apply boot parameter hardening
 sudo reboot
 ```
+
+## Custom Hardened Kernel (v0.2)
+
+Lorica ships an optional hardened kernel built from kernel.org 6.12 LTS with full KSPP hardening:
+
+```bash
+sudo apt install lorica-kernel-cloud
+sudo reboot
+# Select the Lorica kernel in GRUB, or set as default
+```
+
+The custom kernel adds protections that OS-level hardening alone cannot provide:
+
+- **Struct layout randomization** (RANDSTRUCT) -- breaks exploit assumptions about kernel data structures
+- **Stack leak prevention** (STACKLEAK) -- clears kernel stack on every syscall return
+- **Signed kernel modules** -- all in-tree modules signed with SHA-512; unsigned module loading logged
+- **Kernel lockdown** (integrity mode) -- prevents unsigned code in kernel space
+- **Driver stripping** -- Bluetooth, WiFi, sound, GPU, USB HID, and legacy hardware removed at compile time
+- **Dangerous features disabled** -- KEXEC, hibernation, /proc/kcore, /dev/mem removed at compile time
+
+The custom kernel coexists with Debian's stock kernel. You can switch between them via GRUB at any time.
+
+Performance overhead: ~5-7% vs stock Debian kernel (primarily from STACKLEAK and memory zeroing). See [v0.2 kernel plan](docs/plans/v0.2-kernel-plan.md) for full details.
 
 ## Hardened Profile
 
@@ -101,11 +125,21 @@ Tested on Debian 12 (Bookworm) and Debian 13 (Trixie).
 - [hardening-decisions.md](docs/hardening-decisions.md) -- Source of truth for all hardening decisions, including excluded settings and why
 - [THREAT_MODEL.md](docs/THREAT_MODEL.md) -- What Lorica protects against, what it doesn't, and v0.2 plans
 
+## Packages
+
+| Package | Purpose | Architecture |
+|---------|---------|-------------|
+| `lorica-cloud-server` | Meta-package, entry point for users | all |
+| `lorica-base` | Core OS hardening (sysctl, GRUB, module blacklist, audit rules) | all |
+| `lorica-hardened-profile` | Maximum hardening overlay | all |
+| `lorica-keyring` | APT repository signing key | all |
+| `lorica-kernel-cloud` | Custom hardened kernel (v0.2, opt-in) | amd64, arm64 |
+
 ## Roadmap
 
-**v0.1 (current):** OS-level hardening on Debian's stock kernel. Sysctl, boot params, audit rules, module blacklist, compliance docs. Validated on Debian 12 (Bookworm) and Debian 13 (Trixie), amd64 and arm64.
+**v0.1 (shipped):** OS-level hardening on Debian's stock kernel. Sysctl, boot params, audit rules, module blacklist, compliance docs. Validated on Debian 12 (Bookworm) and Debian 13 (Trixie), amd64 and arm64.
 
-**v0.2:** Custom hardened kernel built from kernel.org LTS with full KSPP hardening. AWS AMI.
+**v0.2 (in progress):** Custom hardened kernel built from kernel.org 6.12 LTS with full KSPP hardening, GCC security plugins (RANDSTRUCT, STACKLEAK), signed modules, driver stripping. CI builds both amd64 and arm64.
 
 **v0.3:** Compliance automation (CIS auto-validation, PCI-DSS evidence generation).
 

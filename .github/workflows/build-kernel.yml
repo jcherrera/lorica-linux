@@ -183,9 +183,10 @@ jobs:
         working-directory: ${{ env.KERNEL_SRC }}
         continue-on-error: true
         run: |
-          BOOT_OUTPUT=$(timeout 120 vng --run \
-            --kdir . \
-            -- "uname -r && cat /proc/cmdline && echo LORICA_BOOT_OK" 2>&1) \
+          # vng with no --run/--build boots the kernel from the current directory.
+          # -e runs the command in the guest and exits.
+          BOOT_OUTPUT=$(timeout 120 vng -e \
+            "uname -r && cat /proc/cmdline && echo LORICA_BOOT_OK" 2>&1) \
             || true
 
           echo "$BOOT_OUTPUT"
@@ -193,7 +194,7 @@ jobs:
           if echo "$BOOT_OUTPUT" | grep -q "LORICA_BOOT_OK"; then
             echo "Boot test PASSED"
           else
-            echo "::warning::Boot test did not produce LORICA_BOOT_OK -- virtme-ng may have issues in CI"
+            echo "::warning::Boot test did not produce LORICA_BOOT_OK -- check log above"
             exit 1
           fi
 

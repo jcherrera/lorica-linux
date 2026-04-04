@@ -560,3 +560,98 @@ check its configuration rather than setting it manually.
 
 lorica-base sets `ip_forward=0` as the secure default. Container runtimes override at
 startup. This is expected behavior, not a conflict.
+
+---
+
+## 6. Kernel Hardening Config (lorica-kernel-cloud)
+
+**Package:** `lorica-kernel-cloud` (opt-in, installed separately)
+**Source:** kernel.org 6.12 LTS, starting from Debian 13 cloud config
+**Config generation:** `packages/lorica-kernel-cloud/apply-hardening.sh`
+**Full decision log:** `docs/hardening-decisions.md` Section 6
+
+### Approach: Strip Down, Not Build Up
+
+The kernel config starts from Debian 13's `cloud-amd64` / `cloud-arm64` config and strips
+down, rather than building up from `defconfig`. This is intentional:
+
+- Debian's cloud config already includes the right cloud hypervisor drivers (Virtio, ENA, GVE, Hyper-V)
+- Starting from a known-bootable config avoids boot failures from missing drivers
+- The delta between Debian's config and ours is visible and auditable
+- When rebasing to a new kernel version, download new Debian config, re-run `apply-hardening.sh`
+
+### GCC Plugins: Why GCC, Not Clang
+
+We build with GCC + security plugins for v0.2:
+
+| Feature | GCC | Clang |
+|---------|-----|-------|
+| STACKLEAK (clear stack on syscall return) | Yes (plugin) | No equivalent |
+| LATENT_ENTROPY (extra boot entropy) | Yes (plugin) | No equivalent |
+| RANDSTRUCT (struct randomization) | Yes (compiler-agnostic since 6.1) | Yes |
+| kCFI (Control-Flow Integrity) | No | Yes |
+| Shadow Call Stack (arm64) | No | Yes |
+| Debian toolchain match | Yes | No (adds build complexity) |
+
+GCC gives us STACKLEAK and LATENT_ENTROPY, which Clang cannot provide. Clang gives kCFI and
+Shadow Call Stack, which are primarily valuable on arm64/Graviton. KSPP recommends GCC+plugins
+for x86_64 and Clang for arm64. We follow the x86_64 recommendation for v0.2 and will evaluate
+Clang for v0.3 when arm64 is the priority.
+
+### Module Signing: Two-Tier
+
+- **BASE:** All in-tree modules signed with SHA-512. Unsigned modules are logged but not blocked.
+  This is permissive because all cloud-relevant modules (ENA, NVMe, Virtio, overlay, br_netfilter)
+  are in-tree and signed automatically. The only things that would be unsigned are NVIDIA,
+  VirtualBox, or ZFS-DKMS -- none typical for cloud servers.
+
+- **HARDENED:** `module.sig_enforce=1` boot parameter blocks unsigned modules entirely.
+  `kernel.modules_disabled=1` sysctl locks module loading after boot.
+
+Signing key is ephemeral per build (standard for distribution kernels).
+
+### Driver Stripping: What and Why
+
+The custom kernel removes entire subsystems at compile time. This goes beyond the module
+blacklist in `lorica-base` -- blacklisted modules still exist in the kernel image and could
+theoretically be loaded if the blacklist is bypassed. Compile-time removal means the code
+doesn't exist at all.
+
+**Removed:** Bluetooth, WiFi, sound, GPU, USB HID, joystick, touchscreen, webcam, FireWire,
+Thunderbolt, PCMCIA, ISA, NFC, IR, amateur radio, industrial I/O, parallel port, floppy,
+all physical NIC drivers, legacy protocols (IPX, Appletalk, DECnet, ATM, X.25), legacy
+filesystems (NTFS, HFS, JFS, ReiserFS).
+
+**Kept:** Everything needed for cloud VMs and containers -- Virtio, ENA, GVE, Hyper-V, NVMe,
+SCSI, dm-crypt, ext4, XFS, Btrfs, overlayfs, netfilter/nftables, container networking,
+WireGuard, cgroups v2, namespaces, seccomp, eBPF (hardened), AppArmor, SELinux, audit.
+
+### Dangerous Features: Compile-Time vs Sysctl
+
+Several features are disabled both via sysctl (v0.1) and at compile time (v0.2). Compile-time
+removal is stronger because it cannot be bypassed even with `CAP_SYS_ADMIN`:
+
+| Feature | v0.1 (sysctl) | v0.2 (compile-time) |
+|---------|---------------|---------------------|
+| kexec | `kexec_load_disabled=1` | `CONFIG_KEXEC=n` |
+| userfaultfd | `unprivileged_userfaultfd=0` | `CONFIG_USERFAULTFD=n` |
+| ldisc autoload | `ldisc_autoload=0` | `CONFIG_LDISC_AUTOLOAD=n` |
+| DCCP, SCTP | modprobe blacklist | `CONFIG_IP_DCCP=n`, `CONFIG_IP_SCTP=n` |
+| /dev/mem | N/A (exists on stock kernel) | `CONFIG_DEVMEM=n` |
+| /proc/kcore | N/A (exists on stock kernel) | `CONFIG_PROC_KCORE=n` |
+| hibernation | N/A | `CONFIG_HIBERNATION=n` |
+| binfmt_misc | N/A | `CONFIG_BINFMT_MISC=n` |
+
+### Performance Impact
+
+| Feature | Overhead | Notes |
+|---------|----------|-------|
+| STACKLEAK | ~1% | Clears kernel stack on every syscall return |
+| init_on_alloc | <1% | Zero-fill heap allocations |
+| init_on_free | 3-5% | Zero-fill freed memory (first knob to disable if needed) |
+| ZERO_CALL_USED_REGS | ~1% | Clears CPU registers on function return |
+| RANDSTRUCT | ~0% | Compile-time only, no runtime cost |
+| SLAB_FREELIST_HARDENED | ~0% | Negligible metadata validation overhead |
+| **Total BASE** | **~5-7%** | Acceptable for security workloads |
+| nosmt (HARDENED) | Halves vCPUs | Only in hardened profile |
+| slub_debug (HARDENED) | ~5-10% | Only in hardened profile |

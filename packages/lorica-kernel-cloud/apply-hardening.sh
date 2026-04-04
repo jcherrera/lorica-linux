@@ -233,6 +233,13 @@ set_config "CONFIG_SECCOMP_FILTER" "y"
 # SYN cookies (already enabled by Debian)
 set_config "CONFIG_SYN_COOKIES" "y"
 
+# 9P filesystem -- required for virtme-ng CI boot testing.
+# virtme-ng mounts the host root via 9P over virtio.
+set_config "CONFIG_NET_9P" "y"
+set_config "CONFIG_NET_9P_VIRTIO" "y"
+set_config "CONFIG_9P_FS" "y"
+set_config "CONFIG_9P_FS_POSIX_ACL" "y"
+
 # ===================================================================
 # Section 6: Disable Dangerous Features
 # ===================================================================

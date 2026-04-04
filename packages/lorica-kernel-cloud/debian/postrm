@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove|purge)
+    # --- Update GRUB to remove Lorica kernel from boot menu ---
+    if command -v update-grub > /dev/null 2>&1; then
+      update-grub 2> /dev/null || true
+    fi
+
+    echo "lorica-kernel-cloud: Kernel removed. GRUB updated."
+    ;;
+esac
+
+#DEBHELPER#

@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    # --- Update GRUB to include Lorica kernel in boot menu ---
+    if command -v update-grub > /dev/null 2>&1; then
+      update-grub 2> /dev/null || true
+    fi
+
+    echo "lorica-kernel-cloud: Hardened kernel installed."
+    echo "  Reboot and select the Lorica kernel from the GRUB menu."
+    echo "  To make it the default: edit /etc/default/grub or use grub-set-default."
+    ;;
+esac
+
+#DEBHELPER#

@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# Lorica Linux login banner
+# Displays system identity, kernel version, hardening profile, and lockdown mode.
+
+# Only show if lorica-base is installed
+if ! dpkg -l lorica-base > /dev/null 2>&1; then
+    exit 0
+fi
+
+KVER=$(uname -r)
+
+# Detect profile
+if dpkg -l lorica-hardened-profile > /dev/null 2>&1; then
+    PROFILE="HARDENED"
+else
+    PROFILE="BASE"
+fi
+
+# Detect lockdown mode
+if [ -f /sys/kernel/security/lockdown ]; then
+    # Format: "none [integrity] confidentiality" -- extract the active one
+    LOCKDOWN=$(cat /sys/kernel/security/lockdown | grep -o '\[.*\]' | tr -d '[]')
+    if [ -z "$LOCKDOWN" ]; then
+        LOCKDOWN="none"
+    fi
+else
+    LOCKDOWN="n/a"
+fi
+
+# Pad values for alignment
+printf '\n'
+printf '  ╔═══════════════════════════════════════╗\n'
+printf '  ║  LORICA LINUX                         ║\n'
+printf '  ║  Security-hardened Debian             ║\n'
+printf '  ╠═══════════════════════════════════════╣\n'
+printf '  ║  Kernel:   %-26s ║\n' "$KVER"
+printf '  ║  Profile:  %-26s ║\n' "$PROFILE"
+printf '  ║  Lockdown: %-26s ║\n' "$LOCKDOWN"
+printf '  ╚═══════════════════════════════════════╝\n'
+printf '\n'

@@ -6,10 +6,16 @@ case "$1" in
     # Remove auto-generated io_uring sysctl
     rm -f /etc/sysctl.d/91-lorica-io-uring.conf
 
+    # Remove GRUB theme directory
+    rm -rf /boot/grub/themes/lorica
+
+    # Remove MOTD banner
+    rm -f /etc/update-motd.d/10-lorica
+
     # Reload sysctl to revert to defaults
     sysctl --system > /dev/null 2>&1 || true
 
-    # Regenerate GRUB config without Lorica params
+    # Regenerate GRUB config without Lorica theme/params
     if command -v update-grub > /dev/null 2>&1; then
       update-grub 2> /dev/null || true
     fi

@@ -1,0 +1,63 @@
+# Lorica Linux GRUB Theme
+# Minimal, dark, professional. Muted gold accent.
+
+# Global
+title-text: ""
+desktop-color: "#1a1a1a"
+terminal-font: "Unifont Regular 16"
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+
+# Title bar
++ hbox {
+  left = 50%-200
+  top = 25%
+  width = 400
+  height = 30
+  + label {
+    text = "LORICA LINUX"
+    color = "#ffffff"
+    font = "Unifont Regular 16"
+    align = "center"
+  }
+}
+
+# Subtitle
++ label {
+  left = 50%-200
+  top = 25%+35
+  width = 400
+  align = "center"
+  text = "Security-hardened Debian"
+  color = "#666666"
+  font = "Unifont Regular 16"
+}
+
+# Boot menu
++ boot_menu {
+  left = 50%-300
+  top = 35%
+  width = 600
+  height = 40%
+  item_font = "Unifont Regular 16"
+  item_color = "#cccccc"
+  selected_item_font = "Unifont Regular 16"
+  selected_item_color = "#C9A830"
+  item_height = 24
+  item_padding = 4
+  item_spacing = 4
+  selected_item_pixmap_style = "select_*.png"
+}
+
+# Footer
++ label {
+  left = 50%-200
+  top = 100%-40
+  width = 400
+  align = "center"
+  text = "Use arrow keys to select, Enter to boot"
+  color = "#444444"
+  font = "Unifont Regular 16"
+}

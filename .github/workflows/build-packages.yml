@@ -66,6 +66,10 @@ jobs:
           test -f /etc/default/grub.d/50-lorica-hardening.cfg
           test -f /etc/modprobe.d/30-lorica-blacklist.conf
           test -f /etc/audit/rules.d/lorica-compliance.rules
+          test -f /etc/default/grub.d/40-lorica-theme.cfg
+          test -f /boot/grub/themes/lorica/theme.txt
+          test -f /etc/update-motd.d/10-lorica
+          test -x /etc/update-motd.d/10-lorica
           echo "All config files present."
           # Content validation -- configs are not empty stubs
           grep -q "kernel.kptr_restrict=2" /usr/lib/sysctl.d/90-lorica-hardening.conf

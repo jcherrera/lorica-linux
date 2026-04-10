@@ -2,13 +2,13 @@ Package: lorica-base
 Version: 0.1.0-1
 Architecture: all
 Maintainer: Lorica Linux <lorica@example.com>
-Installed-Size: 41
+Installed-Size: 51
 Recommends: apparmor, auditd, fail2ban, ufw, unattended-upgrades
 Filename: pool/main/lorica-base_0.1.0-1_all.deb
-Size: 7492
-MD5sum: 4e08096c9266d540f93e6b01032790b4
-SHA1: a57772881ed9bfba91ab878be90eaee54cf14894
-SHA256: c0f8120c5999c78550701beffc1b4358eb19118e15a695a900aef122aad01cc9
+Size: 8556
+MD5sum: ecb752bf74f743548cbf1fb207940afb
+SHA1: 88dd9a7e8ca66b261a5972fa377ae3a562adca87
+SHA256: b0b7ffc9dff29822a70e2285027d08d80e0de6323ef3433592d2164072f6d3ce
 Section: admin
 Priority: optional
 Description: Lorica Linux base hardening configuration

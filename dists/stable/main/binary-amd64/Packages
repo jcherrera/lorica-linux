@@ -2,13 +2,13 @@ Package: linux-headers-6.12.74-lorica-lorica
 Source: linux-upstream
 Version: 6.12.74-lorica-1
 Architecture: arm64
-Maintainer: runner <runner@runnervm6gd1v.jmkdeooiyfuedidph4xbqsvnah.cx.internal.cloudapp.net>
+Maintainer: runner <runner@runnervm6gd1v.u3ayuvzxdtiundqr33gua4y4gh.cx.internal.cloudapp.net>
 Installed-Size: 52470
 Filename: pool/main/linux-headers-6.12.74-lorica-lorica_6.12.74-lorica-1_arm64.deb
-Size: 9161948
-MD5sum: 83d4c9be274ef66b79748a9bc0c8c47c
-SHA1: 22ea5b52b8840c33b7b14f2245ba9ed7147f2d51
-SHA256: 3e390cdb8766116854b2e2a1976c852e6e0088558800b21f77eba931d63e1bd9
+Size: 9161622
+MD5sum: 8a8e627027a7f8e47764db6bf953cd52
+SHA1: 36057fa25345f12e1395efb419d259ef5f5d0bea
+SHA256: 40ab44b9b03f581b0d97e54b93945bfe7399ad276e2c59b0c8c0d76196c3abaa
 Section: kernel
 Priority: optional
 Homepage: https://www.kernel.org/
@@ -21,13 +21,13 @@ Package: linux-image-6.12.74-lorica-lorica
 Source: linux-upstream
 Version: 6.12.74-lorica-1
 Architecture: amd64
-Maintainer: runner <runner@runnervm35a4x.h0l24wjbi32ehma3ntfoutcuxb.cx.internal.cloudapp.net>
-Installed-Size: 37534
+Maintainer: runner <runner@runnervm35a4x.iarxbvlur4wunilrxwvxixpxve.bx.internal.cloudapp.net>
+Installed-Size: 37514
 Filename: pool/main/linux-image-6.12.74-lorica-lorica_6.12.74-lorica-1_amd64.deb
-Size: 30410588
-MD5sum: 6a4e260967fd908aa75de9f26801aea4
-SHA1: f10026a2d7995684ade74decef41ef252a6320f4
-SHA256: 2d1567d1464349b81ef4c3bb0d3c172983df480f92e614755ab5c7b880971bc8
+Size: 30390138
+MD5sum: c9b0e1b4997130367205530aed887e0b
+SHA1: af1392356a192bb1283654e982ee02cb56bcefeb
+SHA256: c3124e8d47554a22456191f17885086f45ffc754c54973e1bbf852e99fff6e46
 Section: kernel
 Priority: optional
 Homepage: https://www.kernel.org/
@@ -103,6 +103,30 @@ Description: Lorica Linux maximum hardening profile
  workflows. Review docs/hardening-decisions.md before installing.
  .
  Install via: apt install lorica-hardened-profile
+
+Package: lorica-kernel-cloud
+Version: 6.12.74-lorica-1
+Architecture: all
+Maintainer: Lorica Linux <lorica@example.com>
+Installed-Size: 10
+Depends: linux-image-6.12.74-lorica-lorica
+Suggests: lorica-lkrg
+Filename: pool/main/lorica-kernel-cloud_6.12.74-lorica-1_all.deb
+Size: 1712
+MD5sum: 7c5cd08fd87230249f06e7af1d647160
+SHA1: e9f8fcba26d41bca1a13efe08a7ff96c55bee278
+SHA256: caad117f6398c423a87c0a7c63f0f173498fdf81c60c5c09b41f9642f7dc83c6
+Section: kernel
+Priority: optional
+Description: Lorica Linux hardened cloud kernel (meta-package)
+ Installs the Lorica hardened kernel built from kernel.org 6.12 LTS
+ with full KSPP hardening, stripped for cloud server workloads.
+ .
+ This meta-package depends on the current Lorica kernel image.
+ Install this package to track kernel updates automatically.
+ .
+ The kernel coexists with Debian's stock kernel. Select it via GRUB
+ at boot time or set as default.
 
 Package: lorica-keyring
 Version: 0.1.0-1

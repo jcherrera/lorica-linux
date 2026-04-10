@@ -6,17 +6,15 @@ Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.6.2
 
 Package: lorica-kernel-cloud
-Architecture: amd64 arm64
-Depends: ${misc:Depends}
+Architecture: all
+Depends: linux-image-6.12.74-lorica-lorica, ${misc:Depends}
 Suggests: lorica-lkrg
-Description: Lorica Linux hardened cloud kernel
- Custom Linux kernel built from kernel.org 6.12 LTS with full KSPP
- hardening, stripped for cloud server workloads. Includes signed modules,
- struct layout randomization (RANDSTRUCT), stack leak prevention
- (STACKLEAK), and kernel lockdown mode.
+Description: Lorica Linux hardened cloud kernel (meta-package)
+ Installs the Lorica hardened kernel built from kernel.org 6.12 LTS
+ with full KSPP hardening, stripped for cloud server workloads.
  .
- This kernel coexists with Debian's stock kernel. Select it via GRUB
+ This meta-package depends on the current Lorica kernel image.
+ Install this package to track kernel updates automatically.
+ .
+ The kernel coexists with Debian's stock kernel. Select it via GRUB
  at boot time or set as default.
- .
- Built with GCC security plugins. All in-tree modules are signed.
- Out-of-tree modules require compilation against lorica-kernel headers.

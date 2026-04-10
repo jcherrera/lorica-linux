@@ -246,8 +246,11 @@ jobs:
           mkdir -p dists/stable/main/binary-amd64
           mkdir -p dists/stable/main/binary-arm64
 
-          # Remove old config package debs only (preserves kernel debs if present)
-          rm -f pool/main/lorica-*.deb
+          # Remove old config package debs only (preserves kernel debs + meta-package)
+          rm -f pool/main/lorica-base_*.deb
+          rm -f pool/main/lorica-cloud-server_*.deb
+          rm -f pool/main/lorica-hardened-profile_*.deb
+          rm -f pool/main/lorica-keyring_*.deb
 
           # Copy new config debs to pool
           cp ../debs/*.deb pool/main/

@@ -205,8 +205,32 @@ jobs:
           path: kernel-debs-${{ matrix.arch }}/*.deb
           retention-days: 30
 
+  build-meta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential debhelper devscripts
+
+      - name: Build lorica-kernel-cloud meta-package
+        working-directory: packages/lorica-kernel-cloud
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Upload meta-package
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-meta-deb
+          path: packages/lorica-kernel-cloud_*.deb
+          retention-days: 30
+
   publish:
-    needs: build
+    needs: [build, build-meta]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -226,6 +250,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: kernel-debs-arm64
+          path: kernel-debs/
+
+      - name: Download meta-package
+        uses: actions/download-artifact@v4
+        with:
+          name: kernel-meta-deb
           path: kernel-debs/
 
       - name: Checkout gh-pages
@@ -248,9 +278,10 @@ jobs:
           mkdir -p dists/stable/main/binary-amd64
           mkdir -p dists/stable/main/binary-arm64
 
-          # Remove old kernel debs only (preserves config package debs)
+          # Remove old kernel debs and meta-package (preserves config package debs)
           rm -f pool/main/linux-image-*lorica*.deb
           rm -f pool/main/linux-headers-*lorica*.deb
+          rm -f pool/main/lorica-kernel-cloud_*.deb
 
           # Copy new kernel debs (skip debug debs -- too large for GitHub Pages)
           for deb in ../kernel-debs/linux-image-*lorica*.deb; do
@@ -258,6 +289,9 @@ jobs:
             cp "$deb" pool/main/
           done
           cp ../kernel-debs/linux-headers-*lorica*.deb pool/main/ || true
+
+          # Copy meta-package
+          cp ../kernel-debs/lorica-kernel-cloud_*.deb pool/main/
 
           echo "Pool contents:"
           ls -lh pool/main/

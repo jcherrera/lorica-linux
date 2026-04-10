@@ -45,12 +45,9 @@ sudo reboot
 Lorica ships an optional hardened kernel built from kernel.org 6.12 LTS with full KSPP hardening:
 
 ```bash
-# Install the hardened kernel (from the Lorica APT repo)
-sudo apt install linux-image-6.12.74-lorica-lorica
-
-# Reboot into the Lorica kernel
+sudo apt install lorica-kernel-cloud
 sudo reboot
-# Select "Debian GNU/Linux, with Linux 6.12.74-lorica-lorica" in GRUB
+# Select the Lorica kernel in GRUB, or set as default
 ```
 
 The custom kernel adds protections that OS-level hardening alone cannot provide:
@@ -137,7 +134,7 @@ Tested on Debian 12 (Bookworm) and Debian 13 (Trixie).
 | `lorica-base` | Core OS hardening (sysctl, GRUB, module blacklist, audit rules) | all |
 | `lorica-hardened-profile` | Maximum hardening overlay | all |
 | `lorica-keyring` | APT repository signing key | all |
-| `linux-image-*-lorica-lorica` | Custom hardened kernel (v0.2, opt-in) | amd64, arm64 |
+| `lorica-kernel-cloud` | Custom hardened kernel meta-package (v0.2, opt-in) | all |
 
 ## Roadmap
 

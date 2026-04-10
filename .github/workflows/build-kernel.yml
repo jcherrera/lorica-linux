@@ -282,9 +282,10 @@ jobs:
             release dists/stable > dists/stable/Release
 
           # Sign Release
-          gpg --default-key "Lorica Linux Package Signing" \
+          rm -f dists/stable/InRelease dists/stable/Release.gpg
+          gpg --batch --yes --default-key "Lorica Linux Package Signing" \
             --clearsign -o dists/stable/InRelease dists/stable/Release
-          gpg --default-key "Lorica Linux Package Signing" \
+          gpg --batch --yes --default-key "Lorica Linux Package Signing" \
             -abs -o dists/stable/Release.gpg dists/stable/Release
 
       - name: Deploy to gh-pages

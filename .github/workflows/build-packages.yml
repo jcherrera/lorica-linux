@@ -241,25 +241,25 @@ jobs:
         run: |
           cd repo
 
-          # Clean previous repo contents (keep .git)
-          find . -maxdepth 1 -not -name '.git' -not -name '.' -exec rm -rf {} +
-
-          # Create directory structure
+          # Create directory structure (preserves existing pool contents)
           mkdir -p pool/main
           mkdir -p dists/stable/main/binary-amd64
           mkdir -p dists/stable/main/binary-arm64
 
-          # Copy debs to pool
+          # Remove old config package debs only (preserves kernel debs if present)
+          rm -f pool/main/lorica-*.deb
+
+          # Copy new config debs to pool
           cp ../debs/*.deb pool/main/
 
           # Export public key for user install step
           gpg --armor --export "Lorica Linux Package Signing" > lorica-keyring.asc
 
-          # Generate Packages index (paths relative to repo root)
+          # Generate Packages index from full pool (includes kernel debs if present)
           dpkg-scanpackages pool/main /dev/null > dists/stable/main/binary-amd64/Packages
           cp dists/stable/main/binary-amd64/Packages dists/stable/main/binary-arm64/Packages
-          gzip -k dists/stable/main/binary-amd64/Packages
-          gzip -k dists/stable/main/binary-arm64/Packages
+          gzip -k -f dists/stable/main/binary-amd64/Packages
+          gzip -k -f dists/stable/main/binary-arm64/Packages
 
           # Generate Release file
           apt-ftparchive \

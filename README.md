@@ -14,6 +14,7 @@ It is **not** a fork. It is a thin collection of hardening configurations, meta-
 - Minimal attack surface: 38 unnecessary kernel modules disabled, uncommon protocols blocked, cloud-irrelevant drivers stripped from custom kernel
 - Two profiles: production-safe defaults (lorica-base) and maximum hardening (lorica-hardened-profile)
 - Documented rationale for every security decision
+- Branded boot experience: custom GRUB theme and SSH login banner showing kernel, profile, and lockdown status
 - Clean install/uninstall: Lorica uses drop-in configs, never modifies Debian-owned files
 
 ## What This Is Not

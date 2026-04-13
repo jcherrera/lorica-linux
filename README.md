@@ -118,7 +118,7 @@ sudo ./tests/vm-smoke-test.sh --phase uninstall           # Purge all packages, 
 
 The script auto-detects amd64/arm64 and skips arch-specific checks accordingly. It requires a Debian VM (not a container) because it validates boot parameters, kernel lockdown, and sysctl application across reboots.
 
-Tested on Debian 12 (Bookworm) and Debian 13 (Trixie).
+Tested on Debian 13 (Trixie), amd64 and arm64. Includes `tests/kernel-smoke-test.sh` for custom kernel validation (install, post-reboot checks, Docker, uninstall).
 
 ## Documentation
 
@@ -140,9 +140,9 @@ Tested on Debian 12 (Bookworm) and Debian 13 (Trixie).
 
 **v0.1 (shipped):** OS-level hardening on Debian's stock kernel. Sysctl, boot params, audit rules, module blacklist, compliance docs. Validated on Debian 12 (Bookworm) and Debian 13 (Trixie), amd64 and arm64.
 
-**v0.2 (in progress):** Custom hardened kernel built from kernel.org 6.12 LTS with full KSPP hardening, GCC security plugins (RANDSTRUCT, STACKLEAK), signed modules, driver stripping. CI builds both amd64 and arm64.
+**v0.2 (shipped):** Custom hardened kernel built from kernel.org 6.12 LTS with full KSPP hardening, GCC security plugins (RANDSTRUCT, STACKLEAK), signed modules, driver stripping. Validated on Debian 13 amd64 (DigitalOcean) and arm64 (UTM VM). Docker, PostgreSQL, Node.js, nginx all verified working.
 
-**v0.3:** Compliance automation (CIS auto-validation, PCI-DSS evidence generation).
+**v0.3:** Compliance automation (CIS auto-validation, PCI-DSS evidence generation). Evaluate Clang CFI for arm64.
 
 ## Acknowledgments
 

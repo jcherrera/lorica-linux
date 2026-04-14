@@ -140,6 +140,16 @@ set_config "CONFIG_PAGE_TABLE_CHECK_ENFORCED" "y"
 set_config "CONFIG_ZERO_CALL_USED_REGS" "y"
 set_config "CONFIG_RANDOM_KMALLOC_CACHES" "y"
 set_config "CONFIG_RANDOMIZE_KSTACK_OFFSET_DEFAULT" "y"
+set_config "CONFIG_DEBUG_VIRTUAL" "y"
+set_config "CONFIG_DEBUG_SG" "y"
+set_config "CONFIG_DEBUG_NOTIFIERS" "y"
+set_config "CONFIG_SCHED_CORE" "y"
+set_config "CONFIG_HW_RANDOM_TPM" "y"
+set_config "CONFIG_PROC_MEM_NO_FORCE" "y"
+set_config "CONFIG_KFENCE_SAMPLE_INTERVAL" "100"
+disable_config "CONFIG_SLAB_MERGE_DEFAULT"
+disable_config "CONFIG_MODULE_FORCE_LOAD"
+disable_config "CONFIG_SECURITY_SELINUX_DEVELOP"
 
 # Address space layout randomization (already enabled by Debian)
 set_config "CONFIG_RANDOMIZE_BASE" "y"
@@ -225,6 +235,8 @@ set_config "CONFIG_DEBUG_WX" "y"
 set_config "CONFIG_IOMMU_SUPPORT" "y"
 set_config "CONFIG_IOMMU_DEFAULT_DMA_STRICT" "y"
 disable_config "CONFIG_IOMMU_DEFAULT_DMA_LAZY"
+set_config "CONFIG_INTEL_IOMMU_DEFAULT_ON" "y"
+set_config "CONFIG_AMD_IOMMU" "y"
 
 # Seccomp (already enabled by Debian)
 set_config "CONFIG_SECCOMP" "y"
@@ -292,6 +304,12 @@ disable_config "CONFIG_COMPAT_BRK"
 
 # ACPI custom method -- arbitrary ACPI write vector
 disable_config "CONFIG_ACPI_CUSTOM_METHOD"
+
+# Socket diagnostics -- attack surface reduction
+disable_config "CONFIG_INET_DIAG"
+
+# MSR access from userspace -- info leak vector
+disable_config "CONFIG_X86_MSR"
 
 # ===================================================================
 # Section 7: Driver Stripping (cloud-only kernel)

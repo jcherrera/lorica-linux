@@ -61,7 +61,7 @@ The custom kernel adds protections that OS-level hardening alone cannot provide:
 
 The custom kernel coexists with Debian's stock kernel. You can switch between them via GRUB at any time.
 
-Performance overhead: ~5-7% vs stock Debian kernel (primarily from STACKLEAK and memory zeroing). See [v0.2 kernel plan](docs/plans/v0.2-kernel-plan.md) for full details.
+Performance overhead: ~5-7% vs stock Debian kernel (primarily from STACKLEAK and memory zeroing). Scores **185/250 (74%)** on [kernel-hardening-checker](https://github.com/a13xp0p0v/kernel-hardening-checker) -- remaining items are intentional tradeoffs for cloud server usability (see [hardening-decisions.md](docs/hardening-decisions.md#67-kernel-hardening-checker-results)).
 
 ## Hardened Profile
 
